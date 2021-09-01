@@ -1,0 +1,6 @@
+{;; PostgreSQL database options
+ :postgresql {:jdbcUrl "jdbc:postgresql://localhost/lipo"}
+ :lmdb-dir ".lmdb" ; locally store index under project root folder
+ :lucene-dir ".lucene" ; directory to store full text search indexes
+ ;; Port to serve
+ :port 3000}
