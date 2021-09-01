@@ -1,0 +1,37 @@
+{:paths ["src" "resources"]
+ :deps {ripley/ripley {:git/url "https://github.com/tatut/ripley.git"
+                       :sha "ade8f4dc95afd56fe4dd2af62b2da4a134029a45"
+                       ;;:local/root "../ripley"
+                       }
+        dev.tatut/re-html-template {:git/url "https://github.com/tatut/re-html-template.git"
+                                    :sha "ec765bed5399ae3895693bdc1bb9961b829209d6"}
+        compojure/compojure {:mvn/version "1.6.1"}
+        http-kit/http-kit {:mvn/version "2.5.3"}
+        co.deps/ring-etag-middleware {:mvn/version "0.2.1"}
+
+
+        pro.juxt.crux/crux-core {:mvn/version "1.18.1"}
+        pro.juxt.crux/crux-jdbc {:mvn/version "1.18.1"}
+        com.zaxxer/HikariCP {:mvn/version "3.4.5"}
+        org.postgresql/postgresql {:mvn/version "42.2.18"}
+        ;; NOTE: on mac lmdb requires setting environment
+        ;; CRUX_DISABLE_LIBCRYPTO=true
+        ;; CRUX_ENABLE_BYTEUTILS_SHA1=true
+        ;; to prevent crash "java is loading libcrypto in an unsafe way"
+        pro.juxt.crux/crux-lmdb {:mvn/version "1.18.1"}
+        pro.juxt.crux/crux-lucene {:mvn/version "1.18.0"}
+
+        ;; Required for multipart upload (for now)
+        javax.servlet/servlet-api {:mvn/version "2.5"}
+
+        ;; OWASP library to sanitize HTML
+        com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer
+        {:mvn/version "20200713.1"}
+
+        ;; S3 libraries
+        com.cognitect.aws/api {:mvn/version "0.8.456"}
+        com.cognitect.aws/endpoints {:mvn/version "1.1.11.789"}
+        com.cognitect.aws/s3 {:mvn/version "799.2.682.0"}
+
+        }
+ :aliases {:dev {:extra-paths ["dev-src"]}}}
