@@ -16,6 +16,11 @@ Watch style changes with:
 
 Open http://localhost:3000/
 
+## Dependencies
+
+Content editor component in the portal requires CKEditor 5, which is not bundled in this repository.
+Create your own minimized build and copy it `resources/public/ckeditor.js`.
+
 
 ## Seeding environment with admin commands
 
