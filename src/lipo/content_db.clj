@@ -6,12 +6,16 @@
 
 (def ^:private root-path #{nil "" "/"})
 
+(defn content-id? [id]
+  (or (= content-model/root-page-id id)
+      (uuid? id)))
+
 (defn content-ref [content-id-or-entity]
   {:pre [(or
-          (uuid? content-id-or-entity)
+          (content-id? content-id-or-entity)
           (and (map? content-id-or-entity)
-               (uuid? (:crux.db/id content-id-or-entity))))]}
-  (if (uuid? content-id-or-entity)
+               (content-id? (:crux.db/id content-id-or-entity))))]}
+  (if (content-id? content-id-or-entity)
     content-id-or-entity
     (:crux.db/id content-id-or-entity)))
 
@@ -99,7 +103,7 @@
   If passed the root path, returns nil."
   [db id-or-path]
   (cond
-    (uuid? id-or-path)
+    (content-id? id-or-path)
     id-or-path
 
     (contains? root-path id-or-path)
@@ -145,4 +149,4 @@
                               :where [[?id :content/path ?path]]
                               :in [[?id ...]]}
                             segments))]
-    (str "/" (str/join "/" (map paths segments)))))
+    (str/join "/" (map paths segments))))
