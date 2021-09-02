@@ -75,14 +75,6 @@
     (add-icon)
     title]))
 
-#_(defn- render-portlet [ctx portlet]
-  (let [title (p/title ctx portlet)]
-    (h/html
-     [:div.portlet.border-black.rounded.border-2.m-2
-      [::h/when title
-       [:div.bg-blue-200 title]]
-      (p/render ctx portlet)])))
-
 (defn app-routes [ctx config]
   (routes
 
