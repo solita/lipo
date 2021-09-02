@@ -1,7 +1,8 @@
 (ns lipo.content-db
   "Queries and transactions for content pages."
   (:require [crux.api :as crux]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [lipo.content-model :as content-model]))
 
 (def ^:private root-path #{nil "" "/"})
 
@@ -37,12 +38,15 @@
   [db path-or-parent & {:keys [type check-children?]
                         :or {check-children? false}}]
   (let [parent (cond
-                 (contains? root-path path-or-parent) nil
-                 (uuid? path-or-parent) path-or-parent
-                 :else (content-id db path-or-parent))
-        parent-where (if-not parent
-                       '(not-join [?c] [?c :content/parent])
-                       '[?c :content/parent ?parent])
+                 (contains? root-path path-or-parent)
+                 content-model/root-page-id
+
+                 (uuid? path-or-parent)
+                 path-or-parent
+
+                 :else
+                 (content-id db path-or-parent))
+        parent-where '[?c :content/parent ?parent]
         type-where (when type
                      '[?c :content/type ?type])
         results
@@ -99,7 +103,7 @@
     id-or-path
 
     (contains? root-path id-or-path)
-    nil
+    content-model/root-page-id
 
     (and (string? id-or-path)
          (str/starts-with? id-or-path "/"))

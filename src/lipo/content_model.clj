@@ -2,6 +2,10 @@
   "Specs that define the content model."
   (:require [clojure.spec.alpha :as s]))
 
+(def root-page-id
+  "The :crux.db/id value of the root page, all top level page will have this as :content/parent."
+  "root")
+
 (def content-types #{:news :memo :page})
 
 (s/def :content/type content-types)
