@@ -28,7 +28,8 @@
             lipo.portlet.breadcrumbs
             lipo.portlet.search
             lipo.portlet.news
-            lipo.portlet.menu))
+            lipo.portlet.menu
+            lipo.portlet.list))
 
 (defonce server (atom nil))
 
