@@ -56,12 +56,16 @@
                                                      :term ""
                                                      :results []})
         search! (fn [term]
-                  (when (not= term
-                              (:term (lp/current-value state-source)))
-                    (set-state! {:searching? true
+                  (if (str/blank? term)
+                    (set-state! {:searching? false
                                  :term term
                                  :results []})
-                    (search db term set-state!)))
+                    (when (not= term
+                            (:term (lp/current-value state-source)))
+                      (set-state! {:searching? true
+                                   :term term
+                                   :results []})
+                      (search db term set-state!))))
         results-source (c= (:results %state-source))]
     (html
      {:file "templates/search.html" :selector "body div"}
