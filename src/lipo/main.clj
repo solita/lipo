@@ -101,9 +101,9 @@
        (when (= m :get)
          (render-page ctx))))
 
-   ;; Fallback, log requests that were not handled
+   ;; Fallback, debug log requests that were not handled
    (fn [req]
-     (log/info "Unhandled request:" req)
+     (log/debug "Unhandled request:" req)
      nil)))
 
 (defn load-config []
