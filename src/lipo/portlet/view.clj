@@ -1,5 +1,15 @@
 (ns lipo.portlet.view
-  "Portlet that simply and optionally edits a content page by id or path."
+  "Portlet that simply and optionally edits a content page by id or path.
+
+  Can show other portlets that are defined in the content.
+
+  In content, portlets can be defined using with EDN map surrounded by brackets.
+
+
+  Example:
+  {{:portlet/type :some-portlet :some \"option\"}}
+
+  Will replace that with the rendered portlet."
   (:require [lipo.portlet :as p]
             [lipo.content-db :as content-db]
             [ripley.html :as h]
@@ -9,7 +19,8 @@
             [cheshire.core :as cheshire]
             [ripley.js :as js]
             [clojure.string :as str]
-            [lipo.db :as db]))
+            [lipo.db :as db]
+            [taoensso.timbre :as log]))
 
 
 (def editor-config
@@ -30,12 +41,20 @@
             :insertTable
             :mediaEmbed
             :undo
-            :redo]}
+            :redo
+            :horizontalLine
+	    :findAndReplace
+	    :fontBackgroundColor
+	    :fontColor
+	    :fontFamily
+	    :htmlEmbed
+            ]}
    :language :fi
    :image {:toolbar [:imageTextAlternative
                      :imageStyle:inline
                      :imageStyle:block
-                     :imageStyle:side]}
+                     :imageStyle:side
+                     :linkImage]}
    :table {:contentToolbar [:tableColumn
                             :tableRow
                             :mergeTableCells]}
@@ -91,6 +110,39 @@
        "window.E = e;"
        "});")]]]))
 
+(defn- body-with-portlets
+  "Read portlet definitions from body, returns sequence of
+  strings and portlet definition maps."
+  [body-html-str]
+  (if-let [start (str/index-of body-html-str "{{")]
+    (let [before (subs body-html-str 0 start)
+          after (subs body-html-str (inc start))
+          end (str/index-of after "}}")]
+      (if end
+        (let [definition (subs after 0 (inc end))
+              after (subs after (+ 2 end))]
+          ;; Found portlet definition, try to read it
+          (concat
+           (list before
+                 (try (binding [*read-eval* false]
+                        (read-string definition))
+                      (catch Throwable t
+                        (log/debug t "Unparseable portlet definition:" definition)
+                        "[ERROR: unparseable portlet definition.]")))
+           (body-with-portlets after)))
+        ;; No end found, return as is
+        (list body-html-str)))
+
+    ;; No portlet definition start found, return as is
+    (list body-html-str)))
+
+(defn- render-body-with-portlets [ctx body]
+  (doseq [part (body-with-portlets body)]
+    (if (string? part)
+      ;; FIXME: body *must* be well formed HTML here
+      (h/out! part)
+      (p/render ctx part))))
+
 (defn- view-or-edit-content [{:keys [crux set-flash-message!] :as ctx} path can-edit? set-editing! editing?]
   (let [db (crux/db crux)
         id (content-db/content-id db path)
@@ -118,9 +170,8 @@
           (set-editing! false)))
        [:<>
         [:h3 title]
-        [:div
-         ;; FIXME: body *must* be well formed HTML here
-         (h/out! body)]]]])))
+        (when body
+          (render-body-with-portlets ctx body))]]])))
 
 (defmethod p/render :view [ctx {:keys [path inline-edit?]}]
   (let [path (or path (:here ctx))
