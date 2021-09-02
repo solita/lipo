@@ -18,3 +18,5 @@
 (s/def :content/excerpt string?) ; short excerpt text for content
 (s/def :content/parent string?) ; references :crux.db/id of other document
 (s/def :content/keywords (s/coll-of string?))
+(s/def :content/published inst?) ; publish date
+(s/def :content/expires inst?) ; when content expires (not published any more)
