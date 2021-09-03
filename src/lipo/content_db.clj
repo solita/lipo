@@ -2,7 +2,8 @@
   "Queries and transactions for content pages."
   (:require [crux.api :as crux]
             [clojure.string :as str]
-            [lipo.content-model :as content-model]))
+            [lipo.content-model :as content-model]
+            [lipo.db :as db]))
 
 (def ^:private root-path #{nil "" "/"})
 
@@ -150,3 +151,9 @@
                               :in [[?id ...]]}
                             segments))]
     (str/join "/" (map paths segments))))
+
+
+(defn page-entity
+  "Pull page entity by id or path."
+  [db content-path-or-id]
+  (crux/entity db (content-id db content-path-or-id)))

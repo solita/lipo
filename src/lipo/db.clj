@@ -3,6 +3,8 @@
   (:require [crux.api :as crux]
             [taoensso.timbre :as log]))
 
+(def db crux/db)
+
 (defn tx
   "Submit tx with the given tx operations. Waits until tx is processed by this node."
   [crux & tx-ops]
