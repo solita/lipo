@@ -76,7 +76,7 @@
   "Create an editor form for updating an existing document or creating a new one."
   [{:content/keys [title excerpt body type path] :as content} save! delete! cancel]
   (h/html
-   [:span
+   [:div
     [:form.editor
      ;; Show path field when creating new sub page
      [::h/when (not path)
@@ -104,13 +104,14 @@
      [:div#content-body]
      [:div.flex.justify-between
       ;; Show delete only for existing content
-      [::h/when path
+      [::h/if path
        [:button.rounded.bg-red-500.text-white.m-1.p-1
         {:on-click [#(delete! content) js/prevent-default]}
-        "Poista"]]
+        "Poista"]
+       [:div]]
       [:div.flex.flex-row
        [:button.rounded.bg-yellow-500.m-1.p-1.text-white
-        {:on-click [#(cancel)]}
+        {:on-click [cancel js/prevent-default]}
         "Peruuta"]
        [:button.rounded.bg-green-500.m-1.p-1.text-white
         {:type "submit"
@@ -216,6 +217,6 @@
                        true)
         [edit-source set-edit-state!] (source/use-state {:editing? false})]
     (h/html
-     [:span
+     [:div
       [::h/live edit-source
        (partial view-or-edit-content ctx path can-edit? set-edit-state!)]])))
