@@ -4,27 +4,25 @@
   (:require [re-html-template.core :refer [html]]
             [lipo.portlet :as p]
             [lipo.content-db :as content-db]
-            [lipo.db :as db]))
+            [lipo.db :as db]
+            [ripley.js :as js]))
 
-(defn- menu-link [db here {:content/keys [title] :as content}]
+(defmacro link-transforms [go! title path]
+  `[:a {:set-attributes
+        {:href ~path
+         :on-click [(partial ~go! ~path) js/prevent-default]}
+        :replace-children ~title}])
+
+(defn- menu-link [db go! here {:content/keys [title] :as content}]
   (let [path (content-db/path db content)]
     (if (= path here)
-      (html
-       {:file "templates/menu.html"
-        :selector "a.menu-link-active"}
-       :a {:set-attributes
-           {:href (content-db/path db content)}
-           :replace-children title})
-      (html
-       {:file "templates/menu.html"
-        :selector "a.menu-link"}
+      (html {:file "templates/menu.html" :selector "a.menu-link-active"}
+            (link-transforms go! title path))
+      (html {:file "templates/menu.html" :selector "a.menu-link"}
+            (link-transforms go! title path)))))
 
-       :a {:set-attributes
-           {:href (content-db/path db content)}
-           :replace-children title}))))
-
-(defmethod p/render :menu [{:keys [db here]} _]
+(defmethod p/render :menu [{:keys [db here go!]} _]
   (let [items (->> (content-db/ls db "/")
                    (sort-by :content/title))]
     (doseq [item items]
-      (menu-link db here item))))
+      (menu-link db go! here item))))
