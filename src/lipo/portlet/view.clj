@@ -78,6 +78,7 @@
   (h/html
    [:span
     [:form.editor
+     ;; Show path field when creating new sub page
      [::h/when (not path)
       (text-field "path" "Polku:")]
 
@@ -96,9 +97,11 @@
      [:input#newbody {:name "body" :type "hidden"}]
      [:div#content-body]
      [:div.flex
-      [:button.rounded.bg-red-500.text-white.m-1.p-1
-       {:on-click [#(delete! content) js/prevent-default]}
-       "Poista"]
+      ;; Show delete only for existing content
+      [::h/when path
+       [:button.rounded.bg-red-500.text-white.m-1.p-1
+        {:on-click [#(delete! content) js/prevent-default]}
+        "Poista"]]
       [:div.flex-grow]
       [:button.rounded.bg-green-400.m-1.p-1.text-white
        {:type "submit"
