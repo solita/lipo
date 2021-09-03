@@ -68,7 +68,7 @@
   ([name label] (text-field name label ""))
   ([name label value]
    (h/html
-    [:div.my-2
+    [:div.my-3
      [:label {:class "block" :for name} label]
      [:input {:id name :name name :value value}]])))
 
@@ -82,7 +82,7 @@
      [::h/when (not path)
       (text-field "path" "Polku:")]
 
-     [:div.my-2
+     [:div.my-3
       [:label {:class "block" :for "type"}
        "Tyyppi:"]
       [:select {:name "type"}
@@ -95,25 +95,25 @@
         [:option {:value value :selected selected?} label]]]]
 
      (text-field "title" "Otsikko:" title)
-     [:div.my-2
+     [:div.my-3
       [:label
        "Ote:"]
-      [:textarea#excerpt {:name "excerpt"}
+      [:textarea.excerpt {:name "excerpt"}
        excerpt]]
      [:input#newbody {:name "body" :type "hidden"}]
      [:div#content-body]
-     [:div.flex.justify-between
+     [:div.flex.justify-between.mt-3
       ;; Show delete only for existing content
       [::h/if path
-       [:button.rounded.bg-red-500.text-white.m-1.p-1
+       [:button.danger
         {:on-click [#(delete! content) js/prevent-default]}
         "Poista"]
        [:div]]
       [:div.flex.flex-row
-       [:button.rounded.bg-yellow-500.m-1.p-1.text-white
+       [:button.secondary.mr-2
         {:on-click [cancel js/prevent-default]}
         "Peruuta"]
-       [:button.rounded.bg-green-500.m-1.p-1.text-white
+       [:button.primary
         {:type "submit"
          :on-click ["document.getElementById('newbody').value = window.E.getData()"
                     (js/js save! (js/form-values "form.editor")) js/prevent-default]}
@@ -181,17 +181,18 @@
       [::h/when (and can-edit? (and
                                  (not editing?)
                                  (not creating?)))
-       [:div.flex.align-right
-        [:button.bg-gray-300.rounded.p-1
+       [:div.flex.justify-end
+        [:button.primary.small.mr-3
          {:on-click #(set-edit-state! {:editing? true
                                        :sub-page? false
                                        :content content})}
          "Muokkaa"]
-        [:button {:on-click #(set-edit-state! {:creating? true
-                                               :sub-page? true
-                                               :content {:crux.db/id (UUID/randomUUID)
-                                                         :content/parent id}})}
-         "Luo alisivu"]]]
+        [:button.secondary.small
+         {:on-click #(set-edit-state! {:creating? true
+                                       :sub-page? true
+                                       :content {:crux.db/id (UUID/randomUUID)
+                                                 :content/parent id}})}
+         "Luo uusi alisivu"]]]
       [::h/if (or editing? creating?)
        (editor-form
          (:content edit-state)
