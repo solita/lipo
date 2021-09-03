@@ -34,7 +34,7 @@
 
 (defn flash-message [{:keys [variant message] :as m}]
   (h/html
-   [:span
+   [:div
     (when message
       (case variant
         :success

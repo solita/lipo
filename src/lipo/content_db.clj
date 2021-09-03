@@ -165,18 +165,18 @@
              sub-page?
              new-content?
              content
-             {:keys [title type body path]}]
+             {:keys [title type body path excerpt]}]
   ;; PENDING figure out what the model for the user is
   (let [meta (if new-content?
                (meta-model/creation-meta user)
                (meta-model/modification-meta user))]
-    (def content* content)
     ;; PENDING: Should merge as a db function
     (db/tx crux
       [:crux.tx/put
        (merge content
          {:content/title title
-          :content/body body}
+          :content/body body
+          :content/excerpt excerpt}
          meta
          (when-not (str/blank? path)
            {:content/path path})

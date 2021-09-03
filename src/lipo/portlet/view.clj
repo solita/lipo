@@ -69,23 +69,24 @@
   ([name label value]
    (h/html
     [:div.my-2
-     [:label {:class "inline-block w-1/4" :for name} label]
-     [:input {:class "w-3/4" :id name :name name :value value}]])))
+     [:label {:class "block" :for name} label]
+     [:input {:id name :name name :value value}]])))
 
 (defn- editor-form
   "Create an editor form for updating an existing document or creating a new one."
-  [{:content/keys [title body type path] :as content} save! delete! cancel]
+  [{:content/keys [title excerpt body type path] :as content} save! delete! cancel]
   (h/html
-   [:span
+   [:div
     [:form.editor
      ;; Show path field when creating new sub page
      [::h/when (not path)
       (text-field "path" "Polku:")]
 
      [:div.my-2
-      [:label {:class "inline-block w-1/4" :for "type"} "Tyyppi:"]
-      [:select {:class "w-3/4" :name "type"}
-       [:option {:value ""} " "] ; no type
+      [:label {:class "block" :for "type"}
+       "Tyyppi:"]
+      [:select {:name "type"}
+       [:option {:value ""} " "]                            ; no type
        [::h/for [t content-model/content-types
                  :let [value (name t)
                        ;; translate this
@@ -94,17 +95,23 @@
         [:option {:value value :selected selected?} label]]]]
 
      (text-field "title" "Otsikko:" title)
+     [:div.my-2
+      [:label
+       "Ote:"]
+      [:textarea#excerpt {:name "excerpt"}
+       excerpt]]
      [:input#newbody {:name "body" :type "hidden"}]
      [:div#content-body]
      [:div.flex.justify-between
       ;; Show delete only for existing content
-      [::h/when path
+      [::h/if path
        [:button.rounded.bg-red-500.text-white.m-1.p-1
         {:on-click [#(delete! content) js/prevent-default]}
-        "Poista"]]
+        "Poista"]
+       [:div]]
       [:div.flex.flex-row
        [:button.rounded.bg-yellow-500.m-1.p-1.text-white
-        {:on-click [#(cancel)]}
+        {:on-click [cancel js/prevent-default]}
         "Peruuta"]
        [:button.rounded.bg-green-500.m-1.p-1.text-white
         {:type "submit"
@@ -161,7 +168,7 @@
                              {:keys [editing? sub-page? creating?] :as edit-state}]
   (let [db (crux/db crux) ; take fresh db on each render
         id (content-db/content-id db path)
-        {:content/keys [title body]
+        {:content/keys [title body excerpt]
          :meta/keys [modifier modified
                      creator created] :as content}
         (crux/entity db id)
@@ -192,10 +199,14 @@
          (partial content-db/delete! ctx)
          cancel)
        [:<>
-        [:h3.mb-2 title]
+        [:h1.my-3 title]
         [:p.mb-3.text-sm.font.text-gray-500 "Julkaistu: " created]
         [::h/when modified
          [:p.mb-3.text-sm.font.text-gray-500 "Muokattu viimeksi: " modified]]
+        [::h/when excerpt
+         [:p.excerpt
+          excerpt]]
+
         (when body
           (render-body-with-portlets ctx body))]]])))
 
@@ -206,6 +217,6 @@
                        true)
         [edit-source set-edit-state!] (source/use-state {:editing? false})]
     (h/html
-     [:span
+     [:div
       [::h/live edit-source
        (partial view-or-edit-content ctx path can-edit? set-edit-state!)]])))
