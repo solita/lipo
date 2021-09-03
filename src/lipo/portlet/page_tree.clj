@@ -28,31 +28,34 @@
                               :in path]
                          path))]]]))
 
-(defn- page-tree-item [{:keys [db initial-open content set-open! path here] :as opts} open?]
+(defn- page-tree-item [{:keys [db initial-open content set-open! path here top-level?] :as opts} open?]
   (let [{id :crux.db/id
          :content/keys [title has-children?]} content
         class (str
-               "p-3 block w-full ml-2 mr-2"
+               "p-3 block w-full mr-2"
                (when (= path here)
-                 " bg-gray-200"))]
+                 " bg-gray-200")
+                (when top-level?
+                  " font-bold"))]
     (h/html
      [:li.block
       [:div.flex.flex-row.items-center
        [::h/when has-children?
-        [:div.inline-block.w-4
+        [:div.inline-block.mr-2.pl-3
          {:on-click #(set-open! (not open?))}
          [::h/if open?
           [:span.oi {:data-glyph "chevron-bottom"}]
           [:span.oi {:data-glyph "chevron-right"}]]]]
        [:a {:href path :class class} title]]
       [::h/when open?
-       [:ul.ml-4
+       [:ul.ml-5
         [::h/for [{child-path :content/path id :crux.db/id :as content}
                   (content-db/ls db (:crux.db/id content) :check-children? true)
                   :let [[open? set-open!] (source/use-state (contains? initial-open id))]]
          [::h/live open? (partial page-tree-item
-                                  (merge opts {:path (str path "/" child-path)
-                                               :content content :set-open! set-open!}))]]]]])))
+                           (merge opts {:path (str path "/" child-path)
+                                        :content content :set-open! set-open!
+                                        :top-level? false}))]]]]])))
 
 (defn- page-tree-live [db here root]
   (let [root-content (content-db/ls db root :check-children? true)
@@ -65,10 +68,12 @@
     (h/html
      [:ul.ml-4
 
-      [::h/for [{id :crux.db/id path :content/path :as content} root-content
+      [::h/for [{id :crux.db/id path :content/path parent :content/parent :as content} root-content
                 :let [[open? set-open!] (source/use-state (contains? initial-open id))]]
        [::h/live open? (partial page-tree-item {:db db
                                                 :here here
+                                                :parent parent
+                                                :top-level? true
                                                 :path (str root "/" path)
                                                 :initial-open initial-open
                                                 :content content
