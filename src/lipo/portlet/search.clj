@@ -12,13 +12,14 @@
             [clojure.string :as str]
             [re-html-template.core :refer [html]]))
 
-(defn- result-view [{db :db :as _ctx}
+(defn- result-view [{db :db go! :go! :as _ctx}
                     {id :crux.db/id
                      :content/keys [title excerpt]}]
   (let [link (content-db/path db id)]
     (h/html
      [:div.search-result
-      [:a {:href link} title]])))
+      [:a {:href link
+           :on-click [#(go! link) js/prevent-default]} title]])))
 
 (defn- results-view [ctx results-source {:keys [searching? term results]}]
   (h/html
