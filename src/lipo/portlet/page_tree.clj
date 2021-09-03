@@ -10,7 +10,8 @@
             [lipo.content-db :as content-db]
             [ripley.html :as h]
             [crux.api :as crux]
-            [ripley.live.source :as source]))
+            [ripley.live.source :as source]
+            [ripley.js :as js]))
 
 (defn page-list [db current-page pages]
   (h/html
@@ -28,7 +29,7 @@
                               :in path]
                          path))]]]))
 
-(defn- page-tree-item [{:keys [db initial-open content set-open! path here top-level?] :as opts} open?]
+(defn- page-tree-item [{:keys [db go! initial-open content set-open! path here top-level?] :as opts} open?]
   (let [{id :crux.db/id
          :content/keys [title has-children?]} content
         class (str
@@ -46,7 +47,9 @@
          [::h/if open?
           [:span.oi {:data-glyph "chevron-bottom"}]
           [:span.oi {:data-glyph "chevron-right"}]]]]
-       [:a {:href path :class class} title]]
+       [:a {:href path
+            :on-click [#(go! path) js/prevent-default]
+            :class class} title]]
       [::h/when open?
        [:ul.ml-5
         [::h/for [{child-path :content/path id :crux.db/id :as content}
@@ -57,7 +60,7 @@
                                         :content content :set-open! set-open!
                                         :top-level? false}))]]]]])))
 
-(defn- page-tree-live [db here root]
+(defn- page-tree-live [go! db here root]
   (let [root-content (content-db/ls db root :check-children? true)
         ;; open a path to current-page
         current-page (content-db/content-id db here)
@@ -71,6 +74,7 @@
       [::h/for [{id :crux.db/id path :content/path parent :content/parent :as content} root-content
                 :let [[open? set-open!] (source/use-state (contains? initial-open id))]]
        [::h/live open? (partial page-tree-item {:db db
+                                                :go! go!
                                                 :here here
                                                 :parent parent
                                                 :top-level? true
@@ -80,5 +84,5 @@
                                                 :set-open! set-open!})]]])))
 
 
-(defmethod p/render :page-tree [{:keys [db here]} {:keys [content-type path]}]
-  (page-tree-live db here (or path "")))
+(defmethod p/render :page-tree [{:keys [db here go!]} {:keys [content-type path]}]
+  (page-tree-live go! db here (or path "")))
