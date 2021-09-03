@@ -98,7 +98,7 @@
      [:div.my-3
       [:label
        "Ote:"]
-      [:textarea.excerpt {:name "excerpt"}
+      [:textarea {:name "excerpt"}
        excerpt]]
      [:input#newbody {:name "body" :type "hidden"}]
      [:div#content-body]
