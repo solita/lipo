@@ -17,7 +17,10 @@
 
   (:require [re-html-template.core :refer [html] :as tpl]
             [ripley.html :as h]
-            [lipo.portlet :as p]))
+            [lipo.portlet :as p]
+            [ripley.live.protocols :as lp]
+            [clojure.string :as str]
+            [ripley.impl.dynamic :as dyn]))
 
 (tpl/set-global-options!
  {:wrap-hiccup '(ripley.html/html %)})
@@ -53,6 +56,13 @@
                :selector "[data-tpl='flash-message-warning']"}
               :div.alert-description {:replace-children message})))]))
 
+(defn- go-script [go-source]
+  (let [id (lp/register! dyn/*live-context* go-source
+                         #(str "window.location='" % "'")
+                         {:patch :eval-js})]
+    (h/html
+     [:script {:data-rl id}])))
+
 (defn main-template [ctx portlets-by-slot]
   (html
    {:file "templates/main-template.html"
@@ -63,6 +73,8 @@
 
    :div#flash-message {:replace-children
                        [::h/live (:flash-message-source ctx) flash-message]}
+
+   :body {:prepend-children (go-script (:go-source ctx))}
 
    "data-portlet-slot"
    {:let-attrs {slot :data-portlet-slot}

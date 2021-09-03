@@ -38,10 +38,16 @@
 (defn page-context [{:keys [request crux] :as ctx}]
   ;; FIXME: should this have a protocol or at least
   ;; well documented keys
-  (let [[source set-msg!] (source/use-state (get-in ctx [:request :session :flash-message]))]
+  (let [[source set-msg!] (source/use-state (get-in ctx [:request :session :flash-message]))
+        [go-source go!] (source/use-state "")]
     (merge ctx
            {:here (:uri request)
             :db (crux/db crux)
+
+            ;; Pages can use go! to send user's browser to a page
+            :go-source go-source
+            :go! go!
+
             :flash-message-source source
             :set-flash-message! #(go
                                    (set-msg! %)

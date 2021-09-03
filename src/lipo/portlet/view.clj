@@ -20,7 +20,8 @@
             [ripley.js :as js]
             [clojure.string :as str]
             [lipo.db :as db]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log])
+  (:import (java.util UUID)))
 
 
 (def editor-config
@@ -73,8 +74,7 @@
 
 (defn- editor-form
   "Create an editor form for updating an existing document or creating a new one."
-  [{path :crux.db/id
-    :content/keys [parent title body type]} save!]
+  [{:content/keys [title body type path]} save!]
   (h/html
    [:span
     [:form.editor
@@ -143,31 +143,56 @@
       (h/out! part)
       (p/render ctx part))))
 
-(defn- view-or-edit-content [{:keys [crux set-flash-message!] :as ctx} path can-edit? set-editing! editing?]
-  (let [db (crux/db crux)
+(defn- save! [{:keys [crux set-flash-message! go!] :as ctx}
+              set-edit-state!
+              sub-page?
+              content
+              {:keys [title type body path]}]
+  ;; PENDING: Should merge as a db function
+  (db/tx crux
+         [:crux.tx/put
+          (merge content
+                 {:content/title title
+                  :content/body body}
+                 (when-not (str/blank? path)
+                   {:content/path path})
+                 (when-not (str/blank? type)
+                   {:content/type (keyword type)}))])
+  (if sub-page?
+    ;; Go to the newly created sub page
+    (go! (content-db/path (crux/db crux) (:crux.db/id content)))
+
+    ;; Set flash message and set new edit state
+    (do
+      (set-flash-message! {:variant :success :message "Sisältö tallennettu."})
+      (set-edit-state! {:editing? false}))))
+
+(defn- view-or-edit-content [{:keys [crux] :as ctx}
+                             path can-edit?
+                             set-edit-state!
+                             {:keys [editing? sub-page?] :as edit-state}]
+  (let [db (crux/db crux) ; take fresh db on each render
         id (content-db/content-id db path)
         {:content/keys [title body] :as content}
         (crux/entity db id)]
-    (def *c content)
     (h/html
      [:div.content-view.ck-content
       [::h/when (and can-edit? (not editing?))
-       [:button.bg-gray-300.rounded.p-1 {:on-click #(set-editing! true)}
-        "Muokkaa"]]
+       [:div.flex.align-right
+        [:button.bg-gray-300.rounded.p-1
+         {:on-click #(set-edit-state! {:editing? true
+                                       :sub-page? false
+                                       :content content})}
+         "Muokkaa"]
+        [:button {:on-click #(set-edit-state! {:editing? true
+                                               :sub-page? true
+                                               :content {:crux.db/id (UUID/randomUUID)
+                                                         :content/parent id}})}
+         "Luo alisivu"]]]
       [::h/if editing?
        (editor-form
-        content
-        (fn [{:keys [title type body]}]
-          ;; PENDING: Should merge as a db function
-          (db/tx crux
-                 [:crux.tx/put
-                  (merge content
-                         {:content/title title
-                          :content/body body}
-                         (when-not (str/blank? type)
-                           {:content/type (keyword type)}))])
-          (set-flash-message! {:variant :success :message "Sisältö tallennettu."})
-          (set-editing! false)))
+        (:content edit-state)
+        (partial save! ctx set-edit-state! sub-page? (:content edit-state)))
        [:<>
         [:h3 title]
         (when body
@@ -178,8 +203,8 @@
         can-edit? (and inline-edit?
                        ;; FIXME: check permission here
                        true)
-        [editing-source set-editing!] (source/use-state false)]
+        [edit-source set-edit-state!] (source/use-state {:editing? false})]
     (h/html
      [:span
-      [::h/live editing-source
-       (partial view-or-edit-content ctx path can-edit? set-editing!)]])))
+      [::h/live edit-source
+       (partial view-or-edit-content ctx path can-edit? set-edit-state!)]])))
