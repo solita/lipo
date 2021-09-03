@@ -4,15 +4,40 @@
   (:import (java.util Date)))
 
 ;; When was this document saved written (time at node when it submitted the tx)
-(s/def :meta/at inst?)
+(s/def :meta/created inst?)
 
-;; Why saved this document (references user :crux.db/id)
-(s/def :meta/by string?)
+;; Who saved this document (references user :crux.db/id)
+(s/def :meta/creator string?)
 
-(defn merge-meta
-  "Add meta fields to document."
+;; When the document was last edited
+(s/def :meta/modified inst?)
+
+;; Who
+(s/def :meta/modifier string?)
+
+
+(defn modification-meta
+  [user]
+  {:meta/modifier user
+   :meta/modified (Date.)})
+
+(defn creation-meta
+  [user]
+  {:meta/creator user
+   :meta/created (Date.)})
+
+(defn merge-creation-meta
+  "Add meta fields of creation to document."
   [user doc]
   (merge
    doc
-   {:meta/by user
-    :meta/at (Date.)}))
+   {:meta/creator user
+    :meta/created (Date.)}))
+
+(defn merge-modification-meta
+  "Add meta fields of modification to a document"
+  [user doc]
+  (merge
+    doc
+    {:meta/modifier user
+     :meta/modified (Date.)}))
