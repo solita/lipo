@@ -74,7 +74,7 @@
 
 (defn- editor-form
   "Create an editor form for updating an existing document or creating a new one."
-  [{:content/keys [title body type path]} save!]
+  [{:content/keys [title body type path] :as content} save! delete!]
   (h/html
    [:span
     [:form.editor
@@ -95,11 +95,16 @@
      (text-field "title" "Otsikko:" title)
      [:input#newbody {:name "body" :type "hidden"}]
      [:div#content-body]
-     [:button.rounded.bg-green-400.m-1.p-1.text-white
-      {:type "submit"
-       :on-click ["document.getElementById('newbody').value = window.E.getData()"
-                  (js/js save! (js/form-values "form.editor")) js/prevent-default]}
-      "Tallenna"]
+     [:div.flex
+      [:button.rounded.bg-red-500.text-white.m-1.p-1
+       {:on-click [#(delete! content) js/prevent-default]}
+       "Poista"]
+      [:div.flex-grow]
+      [:button.rounded.bg-green-400.m-1.p-1.text-white
+       {:type "submit"
+        :on-click ["document.getElementById('newbody').value = window.E.getData()"
+                   (js/js save! (js/form-values "form.editor")) js/prevent-default]}
+       "Tallenna"]]
 
      [:script
       (h/out!
@@ -167,6 +172,13 @@
       (set-flash-message! {:variant :success :message "Sisältö tallennettu."})
       (set-edit-state! {:editing? false}))))
 
+(defn- delete! [{:keys [crux go!] :as ctx}
+                {parent :content/parent
+                 id :crux.db/id}]
+  (let [parent-path (content-db/path (crux/db crux) parent)]
+    (db/delete! crux id)
+    (go! parent-path)))
+
 (defn- view-or-edit-content [{:keys [crux] :as ctx}
                              path can-edit?
                              set-edit-state!
@@ -192,7 +204,8 @@
       [::h/if editing?
        (editor-form
         (:content edit-state)
-        (partial save! ctx set-edit-state! sub-page? (:content edit-state)))
+        (partial save! ctx set-edit-state! sub-page? (:content edit-state))
+        (partial delete! ctx))
        [:<>
         [:h3 title]
         (when body
