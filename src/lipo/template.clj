@@ -61,7 +61,9 @@
   (let [db (db/db crux)
         page (content-db/page-entity db here)
         portlets-by-slot (p/portlets-by-slot db page)
-        ctx (assoc ctx :here here)]
+        ctx (assoc ctx
+                   :db db
+                   :here here)]
     (html
      {:file "templates/main-template.html"
       :selector "#lipo-content"}
