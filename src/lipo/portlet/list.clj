@@ -13,9 +13,10 @@
             [lipo.portlet :as p]
             [lipo.content-db :as content-db]
             [lipo.db :as db]
-            [ripley.html :as h]))
+            [ripley.html :as h]
+            [ripley.js :as js]))
 
-(defmethod p/render :list [{db :db} {paths :paths}]
+(defmethod p/render :list [{:keys [db go!]} {paths :paths}]
   (let [path-id (into {}
                       (map (juxt identity
                                  (partial content-db/content-id db)))
@@ -40,5 +41,7 @@
 
      :a {:for {:item {id :crux.db/id title :content/title}
                :items (some-> path path-id content)}
-         :set-attributes {:href (or (content-db/path db id) "")}
+         :set-attributes {:href (or (content-db/path db id) "")
+                          :on-click [(partial go! (content-db/path db id))
+                                     js/prevent-default]}
          :replace-children title})))
