@@ -3,7 +3,8 @@
   (:require [crux.api :as crux]
             [clojure.string :as str]
             [lipo.content-model :as content-model]
-            [lipo.db :as db]))
+            [lipo.db :as db]
+            [lipo.meta-model :as meta-model]))
 
 (def ^:private root-path #{nil "" "/"})
 
@@ -157,3 +158,42 @@
   "Pull page entity by id or path."
   [db content-path-or-id]
   (crux/entity db (content-id db content-path-or-id)))
+
+
+(defn save! [{:keys [crux set-flash-message! go! user] :as ctx}
+             set-edit-state!
+             sub-page?
+             new-content?
+             content
+             {:keys [title type body path]}]
+  ;; PENDING figure out what the model for the user is
+  (let [meta (if new-content?
+               (meta-model/creation-meta user)
+               (meta-model/modification-meta user))]
+    (def content* content)
+    ;; PENDING: Should merge as a db function
+    (db/tx crux
+      [:crux.tx/put
+       (merge content
+         {:content/title title
+          :content/body body}
+         meta
+         (when-not (str/blank? path)
+           {:content/path path})
+         (when-not (str/blank? type)
+           {:content/type (keyword type)}))]))
+  (if sub-page?
+    ;; Go to the newly created sub page
+    (go! (path (crux/db crux) (:crux.db/id content)))
+
+    ;; Set flash message and set new edit state
+    (do
+      (set-flash-message! {:variant :success :message "Sisältö tallennettu."})
+      (set-edit-state! {:editing? false}))))
+
+(defn delete! [{:keys [crux go!] :as ctx}
+                {parent :content/parent
+                 id :crux.db/id}]
+  (let [parent-path (path (crux/db crux) parent)]
+    (db/delete! crux id)
+    (go! parent-path)))
