@@ -38,15 +38,15 @@
 (defn page-context [{:keys [request crux] :as ctx}]
   ;; FIXME: should this have a protocol or at least
   ;; well documented keys
-  (let [[source set-msg!] (source/use-state (get-in ctx [:request :session :flash-message]))
-        [go-source go!] (source/use-state "")]
+  (let [[source set-msg!] (source/use-state nil)
+        [here-source set-here!] (source/use-state (:uri request))]
     (merge ctx
            {:here (:uri request)
+            :here-source here-source
             :db (crux/db crux)
 
             ;; Pages can use go! to send user's browser to a page
-            :go-source go-source
-            :go! go!
+            :go! set-here!
 
             :flash-message-source source
             :set-flash-message! #(go
@@ -56,14 +56,10 @@
 
 (defn- render-page [ctx]
   (let [{:keys [db here]} (page-context ctx)]
-    (when-let [page-id (content-db/content-id db here)]
-      (let [page (crux/entity db page-id)
-            portlets (p/portlets-by-slot db page)]
-        (h/render-response
-         {:session (merge (get-in ctx [:request :session])
-                          {:flash-message nil})}
-         (fn []
-           (template/main-template (page-context ctx) portlets)))))))
+    (when (content-db/content-id db here)
+      (h/render-response
+       (fn []
+         (template/main-template (page-context ctx)))))))
 
 
 (defn- add-icon []
