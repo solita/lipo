@@ -16,15 +16,21 @@
 (defn- result-view [{db :db go! :go! :as _ctx}
                     {id :crux.db/id
                      :content/keys [title excerpt]}]
-  (let [link (content-db/path db id)]
+  (let [link (content-db/path db id)
+        excerpt (if (> (count excerpt)
+                      100)
+                  (str (subs excerpt 0 100) "...")
+                  excerpt)]
     (h/html
-     [:div.search-result
-      [:a {:href link
-           :on-click [#(go! link) js/prevent-default]} title]])))
+     [:div
+      [:a.search-result {:href link
+                         :on-click [#(go! link) js/prevent-default]}
+       [:strong.block title]
+       [:span.text-sm excerpt]]])))
 
 (defn- results-view [ctx results-source {:keys [searching? term results]}]
   (h/html
-   [:div.search-results.fixed.bg-gray-200
+   [:div.search-results.fixed.bg-white.shadow-md
     [::h/if searching?
      [:svg.animate-spin.h-5.w-5.text-blue-500
       {:xmlns "http://www.w3.org/2000/svg" :viewBox "0 0 24 24"}
@@ -35,11 +41,19 @@
         :d "M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"}]]
      [::h/if (empty? results)
       [::h/when (not (str/blank? term))
-       [:div.no-results (tr! [:search :no-results])]]
-      [:div.fixed.bg-white.p-2.border-black.rounded
-       (collection/live-collection {:key :crux.db/id
+       [:div.no-results.p-3.w-full
+        [:p.w-full (tr! [:search :no-results])]]]
+      [:div
+       (collection/live-collection {:container-element :div
+                                    :key :crux.db/id
                                     :source results-source
                                     :render (partial result-view ctx)})]]]]))
+
+(def search-priority-by-attribute
+  {:content/title 1
+   :content/excerpt 2
+   :content/body 3
+   :content/path 4})
 
 (defn- search [db term set-state!]
   (db/q-async
