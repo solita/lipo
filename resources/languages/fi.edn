@@ -8,7 +8,11 @@
                :success "Onnistui"
                :error "Virhe"}
  :fields
- {:content/path "Polku"
+ {:meta/created "Luotu"
+  :meta/creator "Luonut"
+  :meta/modified "Muokattu"
+  :meta/modifier "Muokannut"
+  :content/path "Polku"
   :content/type "Tyyppi"
   :content/title "Otsikko"
   :content/excerpt "Ote"
