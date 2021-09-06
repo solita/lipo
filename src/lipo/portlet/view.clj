@@ -143,7 +143,12 @@
           (concat
            (list before
                  (try (binding [*read-eval* false]
-                        (read-string definition))
+                        (-> definition
+                            ;; Fix unicode LEFT/RIGHT DOUBLE QUOTATION MARK to
+                            ;; regular ascii double quote
+                            (str/replace \u201c \")
+                            (str/replace \u201d \")
+                            read-string))
                       (catch Throwable t
                         (log/debug t "Unparseable portlet definition:" definition)
                         "[ERROR: unparseable portlet definition.]")))
@@ -154,12 +159,16 @@
     ;; No portlet definition start found, return as is
     (list body-html-str)))
 
-(defn- render-body-with-portlets [ctx body]
+(defn- render-body-with-portlets [{here :here :as ctx} body]
   (doseq [part (body-with-portlets body)]
     (if (string? part)
       ;; FIXME: body *must* be well formed HTML here
       (h/out! part)
-      (p/render ctx part))))
+      ;; If part is has type :view with the same path as this
+      ;; don't recursively render the same page in an infinite loop
+      (when-not (and (= :view (:portlet/type part))
+                     (= here (:path part here)))
+        (p/render ctx part)))))
 
 
 (defn- view-or-edit-content [{:keys [crux] :as ctx}
