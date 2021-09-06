@@ -222,13 +222,20 @@
         (when body
           (render-body-with-portlets ctx body))]]])))
 
-(defmethod p/render :view [ctx {:keys [path inline-edit?]}]
-  (let [path (or path (:here ctx))
-        can-edit? (and inline-edit?
-                       ;; FIXME: check permission here
-                       true)
-        [edit-source set-edit-state!] (source/use-state {:editing? false})]
-    (h/html
-     [:div
-      [::h/live edit-source
-       (partial view-or-edit-content ctx path can-edit? set-edit-state!)]])))
+(defmethod p/render :view [{db :db :as ctx} {:keys [path inline-edit? raw?]}]
+  (let [path (or path (:here ctx))]
+    (if raw?
+      ;; Show raw content (body only)
+      (h/html
+       [:div.content-view.ck-content
+        (h/out! (:content/body (crux/entity db (content-db/content-id db path))))])
+
+      ;; So content with all the bells and whistles and edit UI
+      (let [can-edit? (and inline-edit?
+                           ;; FIXME: check permission here
+                           true)
+            [edit-source set-edit-state!] (source/use-state {:editing? false})]
+        (h/html
+         [:div
+          [::h/live edit-source
+           (partial view-or-edit-content ctx path can-edit? set-edit-state!)]])))))
