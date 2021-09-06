@@ -4,6 +4,7 @@
   (:require [lipo.db :as db]
             [lipo.portlet :as p]
             [lipo.content-db :as content-db]
+            [lipo.localization :refer [tr tr!]]
             [ripley.html :as h]
             [ripley.js :as js]
             [ripley.live.source :as source :refer [c=]]
@@ -34,7 +35,7 @@
         :d "M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"}]]
      [::h/if (empty? results)
       [::h/when (not (str/blank? term))
-       [:div.no-results "Ei tuloksia"]]
+       [:div.no-results (tr! [:search :no-results])]]
       [:div.fixed.bg-white.p-2.border-black.rounded
        (collection/live-collection {:key :crux.db/id
                                     :source results-source
@@ -67,14 +68,19 @@
                                    :term term
                                    :results []})
                       (search db term set-state!))))
-        results-source (c= (:results %state-source))]
+        results-source (c= (:results %state-source))
+        placeholder (tr [:search :placeholder])]
     (html
      {:file "templates/search.html" :selector "body div"}
-     :input#search {:set-attributes
-                    {:on-key-up (js/js-debounced 500 search!
-                                                 (js/input-value "search"))}}
-     :button {:set-attributes {:on-click [(js/js search! (js/input-value "search"))
-                                          "return false"]}}
+     :input#search
+     {:set-attributes
+      {:placeholder placeholder
+       :on-key-up (js/js-debounced 500 search!
+                                   (js/input-value "search"))}}
+
+     :button
+     {:set-attributes {:on-click [(js/js search! (js/input-value "search"))
+                                  "return false"]}}
 
      :div.results
      {:replace [::h/live state-source #(results-view ctx results-source %)]})))

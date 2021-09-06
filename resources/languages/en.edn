@@ -16,4 +16,7 @@
   :content/type "Type"
   :content/title "Title"
   :content/excerpt "Excerpt"
-  :content/body "Body"}}
+  :content/body "Body"}
+
+ :search {:placeholder "Search content..."
+          :no-results "No results found"}}
