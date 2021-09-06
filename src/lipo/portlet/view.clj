@@ -20,7 +20,8 @@
             [ripley.js :as js]
             [clojure.string :as str]
             [lipo.db :as db]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [lipo.localization :refer [tr! tr]])
   (:import (java.util UUID)))
 
 
@@ -80,11 +81,11 @@
     [:form.editor
      ;; Show path field when creating new sub page
      [::h/when (not path)
-      (text-field "path" "Polku:")]
+      (text-field "path" (tr [:fields :content/path]))]
 
      [:div.my-3
       [:label {:class "block" :for "type"}
-       "Tyyppi:"]
+       (tr! [:fields :content/type])]
       [:select {:name "type"}
        [:option {:value ""} " "]                            ; no type
        [::h/for [t content-model/content-types
@@ -94,10 +95,9 @@
                        selected? (= t type)]]
         [:option {:value value :selected selected?} label]]]]
 
-     (text-field "title" "Otsikko:" title)
+     (text-field "title" (tr [:fields :content/title]) title)
      [:div.my-3
-      [:label
-       "Ote:"]
+      [:label (tr! [:fields :content/excerpt])]
       [:textarea {:name "excerpt"}
        excerpt]]
      [:input#newbody {:name "body" :type "hidden"}]
@@ -107,17 +107,17 @@
       [::h/if path
        [:button.danger
         {:on-click [#(delete! content) js/prevent-default]}
-        "Poista"]
+        (tr! [:buttons :delete])]
        [:div]]
       [:div.flex.flex-row
        [:button.secondary.mr-2
         {:on-click [cancel js/prevent-default]}
-        "Peruuta"]
+        (tr! [:buttons :cancel])]
        [:button.primary
         {:type "submit"
          :on-click ["document.getElementById('newbody').value = window.E.getData()"
                     (js/js save! (js/form-values "form.editor")) js/prevent-default]}
-        "Tallenna"]]]
+        (tr! [:buttons :save])]]]
 
      [:script
       (h/out!
@@ -186,13 +186,13 @@
          {:on-click #(set-edit-state! {:editing? true
                                        :sub-page? false
                                        :content content})}
-         "Muokkaa"]
+         (tr! [:buttons :edit])]
         [:button.secondary.small
          {:on-click #(set-edit-state! {:creating? true
                                        :sub-page? true
                                        :content {:crux.db/id (UUID/randomUUID)
                                                  :content/parent id}})}
-         "Luo uusi alisivu"]]]
+         (tr! [:buttons :create-sub-page])]]]
       [::h/if (or editing? creating?)
        (editor-form
          (:content edit-state)
@@ -201,9 +201,11 @@
          cancel)
        [:<>
         [:h1.my-3 title]
-        [:p.mb-3.text-sm.font.text-gray-500 "Julkaistu: " created]
+        [:p.mb-3.text-sm.font.text-gray-500
+         (tr! [:fields :meta/created]) ": " created]
         [::h/when modified
-         [:p.mb-3.text-sm.font.text-gray-500 "Muokattu viimeksi: " modified]]
+         [:p.mb-3.text-sm.font.text-gray-500
+          (tr! [:fields :meta/modified]) ": " modified]]
         [::h/when excerpt
          [:p.excerpt
           excerpt]]

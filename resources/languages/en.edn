@@ -1,0 +1,19 @@
+{:buttons {:edit "Edit"
+           :save "Save"
+           :cancel "Cancel"
+           :delete "Delete"
+           :create-sub-page "Create sub page"}
+ :alert-title {:info "Info"
+               :warning "Warning"
+               :success "Success"
+               :error "Error"}
+ :fields
+ {:meta/created "Created at"
+  :meta/creator "Created by"
+  :meta/modified "Modified at"
+  :meta/modifier "Modified by"
+  :content/path "Path"
+  :content/type "Type"
+  :content/title "Title"
+  :content/excerpt "Excerpt"
+  :content/body "Body"}}

@@ -7,7 +7,8 @@
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [clojure.java.io :as io]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [ripley.html :as h]))
 
 (defonce loaded-languages (atom {}))
 
@@ -15,7 +16,7 @@
 
 (defn- load-language* [language]
   (binding [*read-eval* false]
-    (-> (str "language/" (name language) ".edn")
+    (-> (str "languages/" (name language) ".edn")
         io/resource slurp read-string)))
 
 (defn load-language!
@@ -102,6 +103,11 @@
         :args (s/cat :path (s/coll-of keyword?))
         :ret fn?)
 
+(defn tr!
+  "Output a translation. See [[tr]] for args."
+  [& args]
+  (h/dyn! (apply tr args)))
+
 (defn tr-key
   "Returns a function that translates a keyword under the given `path`.
   This is useful for creating a formatting function for keyword enumerations.
@@ -152,7 +158,8 @@
 
 (defmacro with-language [lang & body]
   `(binding [*language* ~lang]
-     (load-language! *language* (fn [_# _#] ~@body))))
+     (load-language! *language*)
+     ~@body))
 
 (defmacro with-language-fn
   "Return function that is bound to the given language."

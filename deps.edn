@@ -4,7 +4,7 @@
                        ;;:local/root "../ripley"
                        }
         dev.tatut/re-html-template {:git/url "https://github.com/tatut/re-html-template.git"
-                                    :sha "47194b0ceb930d593a0141ae53d2cda17da08bf1"}
+                                    :sha "8d399976b130a00b16fc08f766ee5aa2063362a8"}
         compojure/compojure {:mvn/version "1.6.1"}
         http-kit/http-kit {:mvn/version "2.5.3"}
         co.deps/ring-etag-middleware {:mvn/version "0.2.1"}

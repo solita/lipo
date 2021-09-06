@@ -20,11 +20,17 @@
             [lipo.portlet :as p]
             [lipo.content-db :as content-db]
             [lipo.db :as db]
+            [lipo.localization :refer [tr!]]
             [ripley.live.push-state :as push-state]
             [ripley.live.source :refer [c=]]))
 
 (tpl/set-global-options!
- {:wrap-hiccup '(ripley.html/html %)})
+ {:wrap-hiccup '(ripley.html/html %)
+  :translate (fn [key]
+               (let [msg-path
+                     (binding [*read-eval* false]
+                       (read-string (str "[" key "]")))]
+                 `(tr! ~msg-path)))})
 
 ;; Make strings behave as checks for attribute presence
 (defmethod tpl/custom-match-element String

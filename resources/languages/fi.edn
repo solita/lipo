@@ -1,0 +1,15 @@
+{:buttons {:edit "Muokkaa"
+           :save "Tallenna"
+           :cancel "Peruuta"
+           :delete "Poista"
+           :create-sub-page "Luo uusi alisivu"}
+ :alert-title {:info "Info"
+               :warning "Varoitus"
+               :success "Onnistui"
+               :error "Virhe"}
+ :fields
+ {:content/path "Polku"
+  :content/type "Tyyppi"
+  :content/title "Otsikko"
+  :content/excerpt "Ote"
+  :content/body "Sisältö"}}
