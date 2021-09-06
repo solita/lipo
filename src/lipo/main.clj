@@ -21,6 +21,7 @@
             [lipo.template :as template]
             [clojure.core.async :as async :refer [go <! timeout]]
             [lipo.admin :as admin]
+            [lipo.localization :as localization]
 
             ;; Require portlet implementations
             lipo.portlet.page-tree
@@ -58,8 +59,10 @@
   (let [{:keys [db here]} (page-context ctx)]
     (when (content-db/content-id db here)
       (h/render-response
-       (fn []
-         (template/main-template (page-context ctx)))))))
+       (localization/with-language-fn
+         (or (get-in ctx [:request :session :language]) localization/*language*)
+         (fn []
+           (template/main-template (page-context ctx))))))))
 
 
 (defn- add-icon []

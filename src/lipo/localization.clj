@@ -165,6 +165,7 @@
   "Return function that is bound to the given language."
   [lang fn-to-bind]
   `(let [the-fn# ~fn-to-bind]
+     (load-language! ~lang)
      (fn [& args#]
        (binding [*language* ~lang]
          (apply the-fn# args#)))))
