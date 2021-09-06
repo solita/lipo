@@ -1,7 +1,9 @@
 (ns lipo.db
   "CRUX db utilities"
   (:require [crux.api :as crux]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [ripley.live.source :as source]
+            [ripley.live.protocols :as lp]))
 
 (def db crux/db)
 
@@ -32,6 +34,23 @@
         (cb (apply crux/q db args))
         (catch Throwable t
           (log/warn t "Exception in async query"))))))
+
+(defn q-source
+  "Ripley source for a query. Updates automatically if new transactions."
+  [crux & args]
+  (let [q #(apply crux/q (crux/db crux) args)
+        last-value (atom (q))
+        crux-listener (atom nil)
+        [source _listeners]
+        (source/source-with-listeners #(deref last-value)
+                                      #(-> crux-listener deref .close))]
+    (reset! crux-listener
+            (crux/listen crux {:crux/event-type :crux/indexed-tx}
+                         (fn [& _]
+                           (let [new-value (q)]
+                             (reset! last-value new-value)
+                             (lp/write! source new-value)))))
+    source))
 
 (defn entity [db id]
   (crux/entity db id))

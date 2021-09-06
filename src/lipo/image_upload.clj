@@ -9,7 +9,8 @@
             [ring.util.io :as ring-io]
             [cognitect.aws.client.api :as aws]
             [taoensso.timbre :as log]
-            [lipo.db :as db])
+            [lipo.db :as db]
+            [lipo.meta-model :as meta-model])
   (:import (java.util UUID)))
 
 (def ^:private s3-client (delay (aws/client {:api :s3})))
@@ -45,21 +46,25 @@
   (get-object [_ id]
     (java.io.ByteArrayInputStream.
      (with-open [out (java.io.ByteArrayOutputStream.)]
-       (io/copy (str path id) out)
+       (io/copy (io/file path (str id)) out)
        (.toByteArray out)))))
 
 
 (defn upload [{:keys [crux request storage]}]
+  (def *req request)
   (if-let [upload (get-in request [:multipart-params "upload"])]
     (let [id (UUID/randomUUID)]
       (put-object storage id (:tempfile upload))
       (db/tx crux
              [:crux.tx/put
-              {:crux.db/id id
-               :file/name (:filename upload)
-               :file/content-type (:content-type upload)
-               ;; FIXME meta fields
-               }])
+              (merge
+               {:crux.db/id id
+                :file/name (:filename upload)
+                :file/size (:size upload)
+                :file/content-type (:content-type upload)}
+               (meta-model/creation-meta "FIXME:user")
+               (when-let [content-id (get-in request [:multipart-params "content-id"])]
+                 {:file/content (java.util.UUID/fromString content-id)}))])
       {:status 200
        :headers {"Content-Type" "application/json"}
        :body (cheshire/encode

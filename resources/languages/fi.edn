@@ -16,7 +16,10 @@
   :content/type "Tyyppi"
   :content/title "Otsikko"
   :content/excerpt "Ote"
-  :content/body "Sisältö"}
+  :content/body "Sisältö"
+  :file/name "Tiedoston nimi"
+  :file/size "Koko"
+  :file/content-type "Tiedostotyyppi"}
 
  :search {:placeholder "Hae sisältöä..."
           :no-results "Ei tuloksia"}}

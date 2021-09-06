@@ -21,7 +21,9 @@
             [clojure.string :as str]
             [lipo.db :as db]
             [taoensso.timbre :as log]
-            [lipo.localization :refer [tr! tr]])
+            [lipo.localization :refer [tr! tr]]
+            [ripley.live.collection :as collection]
+            [re-html-template.core :refer [html]])
   (:import (java.util UUID)))
 
 
@@ -171,6 +173,37 @@
         (p/render ctx part)))))
 
 
+(defn- attachments-row [row]
+  (html
+   {:file "templates/attachments.html" :selector "tbody tr"}
+
+   {:href "download-link"} {:set-attributes
+                            {:href (str "/_img?id=" (:crux.db/id row))}}
+   "data-field"
+   {:let-attrs {f :data-field}
+    :replace-children (some->> f keyword (get row) str h/dyn!)}))
+
+(defn- attachments
+  "Manage attachments added to this page."
+  [ctx id]
+  (let [attachments (db/q-source (:crux ctx)
+                                 '{:find [(pull ?f [:file/name :file/size
+                                                    :meta/created
+                                                    :crux.db/id])]
+                                   :where [[?f :file/content ?id]]
+                                   :in [?id]}
+                                 id)]
+    (html
+     {:file "templates/attachments.html" :selector "div.attachments"}
+     :tbody {:replace
+             (collection/live-collection
+              {:key :crux.db/id
+               :container-element :tbody
+               :render attachments-row
+               :source (source/c= (mapv first %attachments))})}
+     {:name "content-id"} {:set-attributes
+                           {:value (str id)}})))
+
 (defn- view-or-edit-content [{:keys [crux] :as ctx}
                              path can-edit?
                              set-edit-state!
@@ -203,11 +236,14 @@
                                                  :content/parent id}})}
          (tr! [:buttons :create-sub-page])]]]
       [::h/if (or editing? creating?)
-       (editor-form
+       [:<>
+        (editor-form
          (:content edit-state)
          (partial content-db/save! ctx set-edit-state! sub-page? creating? (:content edit-state))
          (partial content-db/delete! ctx)
          cancel)
+
+        (attachments ctx id)]
        [:<>
         [:h1.my-3 title]
         [:p.mb-3.text-sm.font.text-gray-500

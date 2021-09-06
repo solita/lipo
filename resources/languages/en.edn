@@ -16,7 +16,10 @@
   :content/type "Type"
   :content/title "Title"
   :content/excerpt "Excerpt"
-  :content/body "Body"}
+  :content/body "Body"
+  :file/name "File name"
+  :file/size "Size"
+  :file/content-type "Type"}
 
  :search {:placeholder "Search content..."
           :no-results "No results found"}}

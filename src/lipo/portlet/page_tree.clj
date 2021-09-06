@@ -33,7 +33,7 @@
   (let [{id :crux.db/id
          :content/keys [title has-children?]} content
         class (str
-               "p-3 block w-full mr-2"
+               "p-3 block w-full mr-2 mb-2 inline-block"
                (when (= path here)
                  " bg-gray-200")
                 (when top-level?
@@ -42,7 +42,7 @@
      [:li.block
       [:div.flex.flex-row.items-center
        [::h/when has-children?
-        [:div.inline-block.mr-2.pl-3
+        [:div.inline-block.mr-2
          {:on-click #(set-open! (not open?))}
          [::h/if open?
           [:span.oi {:data-glyph "chevron-bottom"}]
