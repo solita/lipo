@@ -25,7 +25,8 @@
 
 (defprotocol AttachmentStorage
   (put-object [this id body])
-  (get-object [this id]))
+  (get-object [this id])
+  (delete-object [this id]))
 
 (defrecord S3AttachmentStorage [bucket]
   AttachmentStorage
@@ -36,7 +37,10 @@
                           :Body in})))
   (get-object [_ id]
     (:Body (invoke :GetObject {:Bucket bucket
-                               :Key (str id)}))))
+                               :Key (str id)})))
+  (delete-object [_ id]
+    (invoke :DeleteObject {:Bucket bucket
+                           :Key (str id)})))
 
 (defrecord LocalAttachmentStorage [path]
   AttachmentStorage
@@ -46,10 +50,12 @@
     (java.io.ByteArrayInputStream.
      (with-open [out (java.io.ByteArrayOutputStream.)]
        (io/copy (io/file path (str id)) out)
-       (.toByteArray out)))))
+       (.toByteArray out))))
+  (delete-object [_ id]
+    (io/delete-file (io/file path (str id)))))
 
 
-(defn upload [{storage ::storage :keys [crux request]}]
+(defn- upload [{storage ::storage :keys [crux request]}]
   (def *req request)
   (if-let [upload (get-in request [:multipart-params "upload"])]
     (let [id (UUID/randomUUID)]
@@ -75,7 +81,7 @@
      :body (cheshire/encode
             {:error {:message "No file to upload"}})}))
 
-(defn download [{storage ::storage :keys [crux request]}]
+(defn- download [{storage ::storage :keys [crux request]}]
   (let [id (some-> request :params (get "id") UUID/fromString)
         {:file/keys [content-type]} (when id
                                       (crux/entity (crux/db crux) id))]
@@ -100,7 +106,9 @@
         (log/info "Using local file system attachment storage.")
         (->LocalAttachmentStorage "resources/public/")))}))
 
-(defn attachment-routes [ctx]
+(defn attachment-routes
+  "Return route handlers for attachment upload/download."
+  [ctx]
   (multipart-params/wrap-multipart-params
    (routes
     (POST "/_upload" req
@@ -110,3 +118,12 @@
     ;; Support image as well
     (GET "/_img" req
          (download (assoc ctx :request req))))))
+
+
+(defn delete!
+  "Delete file metadata from CRUX and the file bytes from storage."
+  [{storage ::storage crux :crux} id]
+  {:pre [(uuid? id)]}
+  (db/tx crux [:crux.tx/delete id])
+  (delete-object storage id)
+  :ok)

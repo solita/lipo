@@ -24,7 +24,8 @@
             [taoensso.timbre :as log]
             [lipo.localization :refer [tr! tr]]
             [ripley.live.collection :as collection]
-            [re-html-template.core :refer [html]])
+            [re-html-template.core :refer [html]]
+            [lipo.attachments :as attachments])
   (:import (java.util UUID)))
 
 
@@ -185,7 +186,7 @@
     :replace-children (some->> f keyword (get row) format/display h/dyn!)}
 
    :button.delete-attachment
-   {:set-attributes {:on-click #(db/delete! (:crux ctx) (:crux.db/id row))}}))
+   {:set-attributes {:on-click #(attachments/delete! ctx (:crux.db/id row))}}))
 
 (defn- attachments
   "Manage attachments added to this page."
