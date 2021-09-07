@@ -21,7 +21,9 @@
             [clojure.core.async :as async :refer [go <! timeout]]
             [lipo.admin :as admin]
             [lipo.localization :as localization]
+
             [ring.middleware.oauth2 :as oauth2]
+            [ring.middleware.jwt :as jwt]
 
             ;; Require portlet implementations
             lipo.portlet.page-tree

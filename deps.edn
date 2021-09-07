@@ -35,7 +35,7 @@
 
         ;; OAuth2 login
         ring-oauth2 {:mvn/version "0.2.0"}
-
+        ovotech/ring-jwt {:mvn/version "2.2.1"}
 
         }
  :aliases {:dev {:extra-paths ["dev-src"]}}}
