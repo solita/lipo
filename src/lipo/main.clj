@@ -66,23 +66,6 @@
          (fn []
            (template/main-template (page-context ctx))))))))
 
-
-(defn- add-icon []
-  ;; FIXME: placeholder icon, that needs attribution
-  (h/html
-   [:svg.mr-1 {:version "1.1" :xmlns "http://www.w3.org/2000/svg"
-          :viewBox "0 0 480 480"
-          :style "display: inline-block;"
-          :width 24 :height 24}
-    [:path {:d "M424,184H296V56c0-30.928-25.072-56-56-56c-30.928,0-56,25.072-56,56v128H56c-30.928,0-56,25.072-56,56 c0,30.928,25.072,56,56,56h128v128c0,30.928,25.072,56,56,56c30.928,0,56-25.072,56-56V296h128c30.928,0,56-25.072,56-56 C480,209.072,454.928,184,424,184z M424,280H288c-4.418,0-8,3.582-8,8v136c0,22.091-17.909,40-40,40c-22.091,0-40-17.909-40-40 V288c0-4.418-3.582-8-8-8H56c-22.091,0-40-17.909-40-40s17.909-40,40-40h136c4.418,0,8-3.582,8-8V56c0-22.091,17.909-40,40-40 c22.091,0,40,17.909,40,40v136c0,4.418,3.582,8,8,8h136c22.091,0,40,17.909,40,40S446.091,280,424,280z"}]]))
-
-(defn create-page-link [path title]
-  (h/html
-   [:a.rounded.bg-blue-400.m-1.p-1.text-white.p-2
-    {:href (str path "?new=1")}
-    (add-icon)
-    title]))
-
 (defn app-routes [ctx]
   (routes
 
