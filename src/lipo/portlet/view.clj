@@ -219,6 +219,8 @@
          :meta/keys [modifier modified
                      creator created] :as content}
         (crux/entity db id)
+        created-formatted (format/display created)
+        modified-formatted (format/display modified)
         cancel #(set-edit-state! {:editing? false
                                   :creating? false
                                   :sub-page? false
@@ -252,10 +254,10 @@
        [:<>
         [:h1.my-3 title]
         [:p.mb-3.text-sm.font.text-gray-500
-         (tr! [:fields :meta/created]) ": " created]
+         (tr! [:fields :meta/created]) ": " created-formatted]
         [::h/when modified
          [:p.mb-3.text-sm.font.text-gray-500
-          (tr! [:fields :meta/modified]) ": " modified]]
+          (tr! [:fields :meta/modified]) ": " modified-formatted]]
         [::h/when excerpt
          [:p.excerpt
           excerpt]]
