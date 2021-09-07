@@ -33,5 +33,9 @@
         com.cognitect.aws/endpoints {:mvn/version "1.1.11.789"}
         com.cognitect.aws/s3 {:mvn/version "799.2.682.0"}
 
+        ;; OAuth2 login
+        ring-oauth2 {:mvn/version "0.2.0"}
+
+
         }
  :aliases {:dev {:extra-paths ["dev-src"]}}}
