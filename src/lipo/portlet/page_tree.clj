@@ -51,7 +51,7 @@
             :on-click [#(go! path) js/prevent-default]
             :class class} title]]
       [::h/when open?
-       [:ul.ml-5
+       [:ul.ml-8
         [::h/for [{child-path :content/path id :crux.db/id :as content}
                   (content-db/ls db (:crux.db/id content) :check-children? true)
                   :let [[open? set-open!] (source/use-state (contains? initial-open id))]]
@@ -69,19 +69,19 @@
                              (content-db/parents-of db current-page))
                        #{})]
     (h/html
-     [:ul.ml-4
+      [:ul.ml-4.page-list
 
-      [::h/for [{id :crux.db/id path :content/path parent :content/parent :as content} root-content
-                :let [[open? set-open!] (source/use-state (contains? initial-open id))]]
-       [::h/live open? (partial page-tree-item {:db db
-                                                :go! go!
-                                                :here here
-                                                :parent parent
-                                                :top-level? true
-                                                :path (str root "/" path)
-                                                :initial-open initial-open
-                                                :content content
-                                                :set-open! set-open!})]]])))
+       [::h/for [{id :crux.db/id path :content/path parent :content/parent :as content} root-content
+                 :let [[open? set-open!] (source/use-state (contains? initial-open id))]]
+        [::h/live open? (partial page-tree-item {:db db
+                                                 :go! go!
+                                                 :here here
+                                                 :parent parent
+                                                 :top-level? true
+                                                 :path (str root "/" path)
+                                                 :initial-open initial-open
+                                                 :content content
+                                                 :set-open! set-open!})]]])))
 
 
 (defmethod p/render :page-tree [{:keys [db here go!]} {:keys [content-type path]}]

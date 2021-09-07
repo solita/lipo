@@ -107,5 +107,5 @@
                              (:here-source ctx)
                              (partial lipo-content ctx)]}
 
-   :footer {:replace-children
-            (p/render ctx {:portlet/type :view :path "/_footer" :raw? true})}))
+   :#footer-content {:replace-children
+                     (p/render ctx {:portlet/type :view :path "/_footer" :raw? true})}))
