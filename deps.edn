@@ -1,6 +1,6 @@
 {:paths ["src" "resources"]
  :deps {ripley/ripley {:git/url "https://github.com/tatut/ripley.git"
-                       :sha "4f3a02cb33a95c50538544116cdd82dbb91704c8"
+                       :sha "d6e9830164a7a56e1b9935e3b172321486550fc3"
                        ;;:local/root "../ripley"
                        }
         dev.tatut/re-html-template {:git/url "https://github.com/tatut/re-html-template.git"

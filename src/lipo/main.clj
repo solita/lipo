@@ -85,7 +85,7 @@
   (routes
 
    (image-upload/image-routes ctx config)
-   (context/connection-handler "/__ripley-live")
+   (context/connection-handler "/__ripley-live" :ping-interval 45)
    (GET "/_health" _req {:status 200 :body "ok"})
    (-> (route/resources "/")
        ring-etag-middleware/wrap-file-etag
