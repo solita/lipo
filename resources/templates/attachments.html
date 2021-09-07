@@ -68,7 +68,7 @@
     };
 
     window.addLinkToAttachment = (event) => {
-        const row = event.target.parentNode.parentNode;
+        const row = event.target.parentNode.parentNode.parentNode;
         const link = row.querySelector("a");
         const url = link.getAttribute("href");
         const label = link.innerText;
