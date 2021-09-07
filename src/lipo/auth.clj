@@ -15,14 +15,23 @@
                  (claims->user claims))]
       (handler (assoc req :user user)))))
 
+(defn- wrap-force-request-scheme
+  "Force request scheme (eg. when behind balancer that terminates SSL)"
+  [handler force-request-scheme]
+  (if force-request-scheme
+    (fn [req]
+      (handler (assoc req :scheme force-request-scheme)))
+    handler))
+
 (defn wrap-auth [handler {auth :auth :as _config}]
   (if (and (contains? auth :jwt)
            (contains? auth :oauth2))
     (-> handler
-        (wrap-user-info (:claims->user auth))
+        (wrap-user-info (or (:claims->user auth) identity))
         (jwt/wrap-jwt (merge (:jwt auth)
                              {:find-token-fn request-jwt-token}))
-        (oauth2/wrap-oauth2 (:oauth2 auth)))
+        (oauth2/wrap-oauth2 (:oauth2 auth))
+        (wrap-force-request-scheme (:force-request-scheme auth)))
     (do
       (log/warn "No OAuth2 and JWT configuration.")
       handler)))

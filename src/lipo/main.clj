@@ -157,6 +157,7 @@
   ([env-config-map]
    (let [config (merge-config (load-config) env-config-map)
          _ (log/info "pg connection map:" (assoc (:postgresql config) :password "<redacted>"))]
+     (def *config config) ; debug: store full config for repl use
      (swap! crux init-crux config)
      (swap! server init-server config))))
 
