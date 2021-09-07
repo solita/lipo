@@ -174,7 +174,7 @@
         (p/render ctx part)))))
 
 
-(defn- attachments-row [row]
+(defn- attachments-row [ctx row]
   (html
    {:file "templates/attachments.html" :selector "tbody tr"}
 
@@ -182,7 +182,10 @@
                             {:href (str "/_img?id=" (:crux.db/id row))}}
    "data-field"
    {:let-attrs {f :data-field}
-    :replace-children (some->> f keyword (get row) format/display h/dyn!)}))
+    :replace-children (some->> f keyword (get row) format/display h/dyn!)}
+
+   :button.delete-attachment
+   {:set-attributes {:on-click #(db/delete! (:crux ctx) (:crux.db/id row))}}))
 
 (defn- attachments
   "Manage attachments added to this page."
@@ -200,7 +203,7 @@
              (collection/live-collection
               {:key :crux.db/id
                :container-element :tbody
-               :render attachments-row
+               :render (partial attachments-row ctx)
                :source (source/c= (mapv first %attachments))})}
      {:name "content-id"} {:set-attributes
                            {:value (str id)}})))
