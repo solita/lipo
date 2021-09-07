@@ -22,4 +22,5 @@
   :file/content-type "Tiedostotyyppi"}
 
  :search {:placeholder "Hae sisältöä..."
-          :no-results "Ei tuloksia"}}
+          :no-results "Ei tuloksia"}
+ :attachments {:add-link "Lisää linkki"}}

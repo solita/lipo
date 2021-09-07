@@ -22,4 +22,6 @@
   :file/content-type "Type"}
 
  :search {:placeholder "Search content..."
-          :no-results "No results found"}}
+          :no-results "No results found"}
+
+ :attachments {:add-link "Add link"}}
