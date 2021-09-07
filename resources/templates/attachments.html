@@ -36,10 +36,16 @@
           </p>
         </td>
         <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-          <button class="secondary" onclick="addLinkToAttachment(window.event)">
-            <span class="oi" data-glyph="link-intact"></span>
-            {{:attachments :add-link}}
-          </button>
+          <div class="flex">
+            <button class="secondary mr-2 text-xs" onclick="addLinkToAttachment(window.event)">
+              <span class="oi" data-glyph="link-intact"></span>
+              {{:attachments :add-link}}
+            </button>
+            <button class="danger text-xs delete-attachment">
+              <span class="oi" data-glyph="trash"></span>
+              {{:buttons :delete}}
+            </button>
+          </div>
         </td>
       </tr>
     </tbody>

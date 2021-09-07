@@ -12,6 +12,7 @@
   Will replace that with the rendered portlet."
   (:require [lipo.portlet :as p]
             [lipo.content-db :as content-db]
+            [lipo.format :as format]
             [ripley.html :as h]
             [crux.api :as crux]
             [ripley.live.source :as source]
@@ -181,7 +182,7 @@
                             {:href (str "/_img?id=" (:crux.db/id row))}}
    "data-field"
    {:let-attrs {f :data-field}
-    :replace-children (some->> f keyword (get row) str h/dyn!)}))
+    :replace-children (some->> f keyword (get row) format/display h/dyn!)}))
 
 (defn- attachments
   "Manage attachments added to this page."

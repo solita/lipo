@@ -1,4 +1,5 @@
-{:buttons {:edit "Muokkaa"
+{:date {:date-time-pattern "dd.MM.yyyy HH:mm"}
+ :buttons {:edit "Muokkaa"
            :save "Tallenna"
            :cancel "Peruuta"
            :delete "Poista"
