@@ -1,12 +1,11 @@
-(ns lipo.image-upload
-  "Upload and download of images.
+(ns lipo.attachments
+  "Upload and download of attachments (images and files).
   Bytes are stored to S3, metadata to CRUX"
   (:require [crux.api :as crux]
             [compojure.core :refer [POST GET routes]]
             [cheshire.core :as cheshire]
             [ring.middleware.multipart-params :as multipart-params]
             [clojure.java.io :as io]
-            [ring.util.io :as ring-io]
             [cognitect.aws.client.api :as aws]
             [taoensso.timbre :as log]
             [lipo.db :as db]
@@ -50,7 +49,7 @@
        (.toByteArray out)))))
 
 
-(defn upload [{:keys [crux request storage]}]
+(defn upload [{storage ::storage :keys [crux request]}]
   (def *req request)
   (if-let [upload (get-in request [:multipart-params "upload"])]
     (let [id (UUID/randomUUID)]
@@ -76,7 +75,7 @@
      :body (cheshire/encode
             {:error {:message "No file to upload"}})}))
 
-(defn download [{:keys [crux request storage]}]
+(defn download [{storage ::storage :keys [crux request]}]
   (let [id (some-> request :params (get "id") UUID/fromString)
         {:file/keys [content-type]} (when id
                                       (crux/entity (crux/db crux) id))]
@@ -87,18 +86,27 @@
       {:status 404
        :body "Not found"})))
 
-(defn image-routes [ctx {attachments-bucket :attachments-bucket}]
-  (let [storage (if attachments-bucket
-                  (do
-                    (log/info "Using S3 storage, bucket: " attachments-bucket)
-                    (->S3AttachmentStorage attachments-bucket))
-                  (do
-                    (log/info "Using local file system attachment storage.")
-                    (->LocalAttachmentStorage "resources/public/")))
-        ctx (assoc ctx :storage storage)]
-    (multipart-params/wrap-multipart-params
-     (routes
-      (POST "/_upload" req
-            (upload (assoc ctx :request req)))
-      (GET "/_img" req
-           (download (assoc ctx :request req)))))))
+(defn configure-attachment-storage
+  "Create an attachments storage "
+  [ctx {attachments-bucket :attachments-bucket :as _config}]
+  (merge
+   ctx
+   {::storage
+    (if attachments-bucket
+      (do
+        (log/info "Using S3 storage, bucket: " attachments-bucket)
+        (->S3AttachmentStorage attachments-bucket))
+      (do
+        (log/info "Using local file system attachment storage.")
+        (->LocalAttachmentStorage "resources/public/")))}))
+
+(defn attachment-routes [ctx]
+  (multipart-params/wrap-multipart-params
+   (routes
+    (POST "/_upload" req
+          (upload (assoc ctx :request req)))
+    (GET "/_attachment" req
+         (download (assoc ctx :request req)))
+    ;; Support image as well
+    (GET "/_img" req
+         (download (assoc ctx :request req))))))

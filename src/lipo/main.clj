@@ -16,12 +16,12 @@
             [cheshire.core :as cheshire]
             [ripley.live.source :as source]
             [lipo.content-db :as content-db]
-            [lipo.image-upload :as image-upload]
-            [lipo.portlet :as p]
+            [lipo.attachments :as attachments]
             [lipo.template :as template]
             [clojure.core.async :as async :refer [go <! timeout]]
             [lipo.admin :as admin]
             [lipo.localization :as localization]
+            [ring.middleware.oauth2 :as oauth2]
 
             ;; Require portlet implementations
             lipo.portlet.page-tree
@@ -81,10 +81,10 @@
     (add-icon)
     title]))
 
-(defn app-routes [ctx config]
+(defn app-routes [ctx]
   (routes
 
-   (image-upload/image-routes ctx config)
+   (attachments/attachment-routes ctx)
    (context/connection-handler "/__ripley-live" :ping-interval 45)
    (GET "/_health" _req {:status 200 :body "ok"})
    (-> (route/resources "/")
@@ -140,6 +140,13 @@
                      "################################")
            {}))))))
 
+(defn wrap-oauth2 [handler {oauth2 :oauth2 :as _config}]
+  (if oauth2
+    (oauth2/wrap-oauth2
+     handler
+     oauth2)
+    handler))
+
 (defn init-server [old-server {:keys [port bind-address]
                                :or {port 3000
                                     bind-address "127.0.0.1"}
@@ -147,9 +154,12 @@
   (when old-server
 
     (old-server))
-  (let [server
+  (let [ctx (-> {:crux @crux}
+                (attachments/configure-attachment-storage config))
+        server
         (server/run-server
-         (-> (app-routes {:crux @crux} config)
+         (-> (app-routes ctx)
+             (wrap-oauth2 config)
              params/wrap-params
              session/wrap-session)
          {:port port
