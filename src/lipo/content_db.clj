@@ -165,7 +165,8 @@
              sub-page?
              new-content?
              content
-             {:keys [title type body path excerpt]}]
+             {:keys [title type body excerpt]
+              sub-page-path :path}]
   ;; PENDING figure out what the model for the user is
   (let [meta (if new-content?
                (meta-model/creation-meta user)
@@ -178,13 +179,13 @@
           :content/body body
           :content/excerpt excerpt}
          meta
-         (when-not (str/blank? path)
-           {:content/path path})
+         (when-not (str/blank? sub-page-path)
+           {:content/path sub-page-path})
          (when-not (str/blank? type)
            {:content/type (keyword type)}))]))
   (if sub-page?
     ;; Go to the newly created sub page
-    (go! (path (crux/db crux) (:crux.db/id content)))
+    (go! (path (crux/db crux) content))
 
     ;; Set flash message and set new edit state
     (do
