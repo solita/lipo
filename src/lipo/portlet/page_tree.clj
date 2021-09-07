@@ -33,7 +33,7 @@
   (let [{id :crux.db/id
          :content/keys [title has-children?]} content
         class (str
-               "p-3 block w-full mr-2 mb-2 inline-block"
+               "p-3 block w-full mr-2 mb-2 inline-block overflow-ellipsis overflow-hidden"
                (when (= path here)
                  " bg-gray-200")
                 (when top-level?
