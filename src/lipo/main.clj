@@ -21,9 +21,7 @@
             [clojure.core.async :as async :refer [go <! timeout]]
             [lipo.admin :as admin]
             [lipo.localization :as localization]
-
-            [ring.middleware.oauth2 :as oauth2]
-            [ring.middleware.jwt :as jwt]
+            [lipo.auth :as auth]
 
             ;; Require portlet implementations
             lipo.portlet.page-tree
@@ -68,7 +66,6 @@
 
 (defn app-routes [ctx]
   (routes
-
    (attachments/attachment-routes ctx)
    (context/connection-handler "/__ripley-live" :ping-interval 45)
    (GET "/_health" _req {:status 200 :body "ok"})
@@ -125,26 +122,18 @@
                      "################################")
            {}))))))
 
-(defn wrap-oauth2 [handler {oauth2 :oauth2 :as _config}]
-  (if oauth2
-    (oauth2/wrap-oauth2
-     handler
-     oauth2)
-    handler))
-
 (defn init-server [old-server {:keys [port bind-address]
                                :or {port 3000
                                     bind-address "127.0.0.1"}
                                :as config}]
   (when old-server
-
     (old-server))
   (let [ctx (-> {:crux @crux}
                 (attachments/configure-attachment-storage config))
         server
         (server/run-server
          (-> (app-routes ctx)
-             (wrap-oauth2 config)
+             (auth/wrap-auth config)
              params/wrap-params
              session/wrap-session)
          {:port port
@@ -154,11 +143,19 @@
               (:status  @(htclient/get (str "http://localhost:" port "/_health"))))
     server))
 
+(defn- merge-config [& config-maps]
+  (apply merge-with
+         (fn [a b]
+           (if (and (map? a) (map? b))
+             (merge-config a b)
+             b))
+         config-maps))
+
 (defn start
   ([]
    (start nil))
   ([env-config-map]
-   (let [config (merge (load-config) env-config-map)
+   (let [config (merge-config (load-config) env-config-map)
          _ (log/info "pg connection map:" (assoc (:postgresql config) :password "<redacted>"))]
      (swap! crux init-crux config)
      (swap! server init-server config))))
@@ -181,14 +178,14 @@
    ;; Read S3 bucket name injected as env var
    :attachments-bucket (System/getenv "ATTACHMENTS_NAME")})
 
-(defn main [& _args]
+(defn main [& config-maps]
   (log/info "LIPO is starting up.")
   (try
     (log/set-level! :info)
     (log/merge-config!
      {:appenders
       {:spit (appenders/spit-appender {:fname "lipo.log"})}})
-    (start (load-env-config))
+    (start (apply merge-config (load-env-config) config-maps))
     (catch Throwable t
       (log/error t "LIPO FAILED TO START")
       (System/exit 1))))
