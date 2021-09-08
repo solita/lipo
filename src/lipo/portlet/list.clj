@@ -29,7 +29,9 @@
         content (into {}
                       (map (juxt identity
                                  (partial content-db/ls db)))
-                      (map path-id paths))]
+                      (map path-id paths))
+        content-path (fn [parent-path {:content/keys [path]}]
+                       (str parent-path "/" path))]
     (html
      {:file "templates/list.html"
       :selector "div.list-portlet"}
@@ -39,9 +41,9 @@
 
      :h3 {:replace-children (some-> path path-id titles h/dyn!)}
 
-     :a {:for {:item {id :crux.db/id title :content/title}
+     :a {:for {:item {id :crux.db/id title :content/title :as c}
                :items (some-> path path-id content)}
-         :set-attributes {:href (or (content-db/path db id) "")
-                          :on-click [(partial go! (content-db/path db id))
+         :set-attributes {:href (or (content-path path c) "")
+                          :on-click [(partial go! (content-path path c))
                                      js/prevent-default]}
          :replace-children title})))
