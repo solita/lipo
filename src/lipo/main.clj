@@ -76,7 +76,6 @@
    (admin/admin-routes ctx)
 
    ;; Last route, if no other route matches, this is a page path
-   ;; either save it (when POST) or display it (when GET)
    (fn [{m :request-method user :user :as req}]
      (let [ctx (assoc ctx :request req)]
        (when (= m :get)
