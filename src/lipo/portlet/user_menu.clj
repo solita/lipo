@@ -6,7 +6,7 @@
 
 (defn- md5 [s]
   (str/join
-   (map #(format "%x" %)
+   (map #(format "%02x" %)
         (.digest
          (doto (java.security.MessageDigest/getInstance "MD5")
            (.update (.getBytes s "UTF-8")))))))
