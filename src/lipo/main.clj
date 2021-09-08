@@ -79,9 +79,12 @@
    ;; either save it (when POST) or display it (when GET)
    (fn [{m :request-method user :user :as req}]
      (let [ctx (assoc ctx :request req)]
-       (when (and (= m :get) ((:can-view? auth) user))
-         (render-page (merge ctx
-                             {:can-edit? ((:can-edit? auth) user)})))))
+       (when (= m :get)
+         (if ((:can-view? auth) user)
+           (render-page (merge ctx
+                               {:can-edit? ((:can-edit? auth) user)}))
+           {:status 302
+            :headers {"Location" (:login-url auth)}}))))
 
    ;; Fallback, debug log requests that were not handled
    (fn [req]
@@ -146,7 +149,7 @@
               (:status  @(htclient/get (str "http://localhost:" port "/_health"))))
     server))
 
-(defn- merge-config [& config-maps]
+(defn merge-config [& config-maps]
   (apply merge-with
          (fn [a b]
            (if (and (map? a) (map? b))
