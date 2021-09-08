@@ -87,10 +87,10 @@
     (html
      {:file "templates/search.html" :selector "body div"}
      :input#search
-     {:set-attributes
-      {:placeholder placeholder
-       :on-key-up (js/js-debounced 500 search!
-                                   (js/input-value "search"))}}
+      {:set-attributes
+       {:placeholder placeholder
+        :on-input (js/js-debounced 500 search!
+                    (js/input-value "search"))}}
 
      :button
      {:set-attributes {:on-click [(js/js search! (js/input-value "search"))
