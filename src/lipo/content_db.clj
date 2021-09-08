@@ -4,7 +4,8 @@
             [clojure.string :as str]
             [lipo.content-model :as content-model]
             [lipo.db :as db]
-            [lipo.meta-model :as meta-model]))
+            [lipo.meta-model :as meta-model]
+            [lipo.user-db :as user-db]))
 
 (def ^:private root-path #{nil "" "/"})
 
@@ -172,17 +173,19 @@
                (meta-model/creation-meta user)
                (meta-model/modification-meta user))]
     ;; PENDING: Should merge as a db function
-    (db/tx crux
-      [:crux.tx/put
-       (merge content
-         {:content/title title
-          :content/body body
-          :content/excerpt excerpt}
-         meta
-         (when-not (str/blank? sub-page-path)
-           {:content/path sub-page-path})
-         (when-not (str/blank? type)
-           {:content/type (keyword type)}))]))
+    (db/tx
+     crux
+     (user-db/ensure-user-tx user)
+     [:crux.tx/put
+      (merge content
+             {:content/title title
+              :content/body body
+              :content/excerpt excerpt}
+             meta
+             (when-not (str/blank? sub-page-path)
+               {:content/path sub-page-path})
+             (when-not (str/blank? type)
+               {:content/type (keyword type)}))]))
   (if sub-page?
     ;; Go to the newly created sub page
     (go! (path (crux/db crux) content))
@@ -192,9 +195,11 @@
       (set-flash-message! {:variant :success :message "Sisältö tallennettu."})
       (set-edit-state! {:editing? false}))))
 
-(defn delete! [{:keys [crux go!] :as ctx}
+(defn delete! [{:keys [crux go! user] :as ctx}
                 {parent :content/parent
                  id :crux.db/id}]
   (let [parent-path (path (crux/db crux) parent)]
-    (db/delete! crux id)
+    (db/tx crux
+           (user-db/ensure-user-tx user)
+           [:crux.tx/delete id])
     (go! parent-path)))

@@ -15,15 +15,21 @@
 ;; Who
 (s/def :meta/modifier string?)
 
+(defn user-id-ref
+  "Return reference to user that is saved.
+  User :crux.db/id values are maps of {:user/id \"someuser\"}."
+  [user]
+  {:pre [(some? (:user/id user))]}
+  (select-keys user [:user/id]))
 
 (defn modification-meta
   [user]
-  {:meta/modifier user
+  {:meta/modifier (user-id-ref user)
    :meta/modified (Date.)})
 
 (defn creation-meta
   [user]
-  {:meta/creator user
+  {:meta/creator (user-id-ref user)
    :meta/created (Date.)})
 
 (defn merge-creation-meta
@@ -31,7 +37,7 @@
   [user doc]
   (merge
    doc
-   {:meta/creator user
+   {:meta/creator (user-id-ref user)
     :meta/created (Date.)}))
 
 (defn merge-modification-meta
@@ -39,5 +45,5 @@
   [user doc]
   (merge
     doc
-    {:meta/modifier user
+    {:meta/modifier (user-id-ref user)
      :meta/modified (Date.)}))

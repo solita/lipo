@@ -82,7 +82,8 @@
        (when (= m :get)
          (if ((:can-view? auth) user)
            (render-page (merge ctx
-                               {:can-edit? ((:can-edit? auth) user)}))
+                               {:user user
+                                :can-edit? ((:can-edit? auth) user)}))
            {:status 302
             :headers {"Location" (:login-url auth)}}))))
 

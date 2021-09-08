@@ -11,3 +11,10 @@
                (= existing-user (assoc current-user :crux.db/id id)))
         []
         [[:crux.tx/put new-user]]))))
+
+
+(defn ensure-user-tx
+  "Tx op to ensure a user exists."
+  [user]
+  {:pre [(some? (:user/id user))]}
+  [:crux.tx/fn ::ensure-user user])
