@@ -62,3 +62,32 @@
          (map (fn [id]
                 [:crux.tx/delete id])
               ids)))
+
+
+(defonce tx-fns (atom {}))
+
+(defn register-tx-fn!
+  "Register a tx fn, meant to be called as side effect of loading a namespace."
+  [name body]
+  (swap! tx-fns assoc name body))
+
+(defn init-tx-fns!
+  "Initialize all tx fns. Submits new txs to create any missing functions."
+  [crux]
+  (let [tx-fns @tx-fns
+        existing-fns (into {}
+                           (q (crux/db crux)
+                              '[:find ?id ?fn
+                                :where [?id :crux.db/fn ?fn]
+                                :in [?id ...]]
+                              (keys tx-fns)))
+        changed-or-new-fns
+        (into {}
+              (filter (fn [[name body]]
+                        (not= body (get existing-fns name))))
+              tx-fns)]
+    (when (seq changed-or-new-fns)
+      (apply tx crux
+             (for [[name body] changed-or-new-fns]
+               [:crux.tx/put {:crux.db/id name
+                              :crux.db/fn body}])))))

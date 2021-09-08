@@ -31,7 +31,8 @@
             lipo.portlet.news
             lipo.portlet.menu
             lipo.portlet.list
-            lipo.portlet.user-menu))
+            lipo.portlet.user-menu
+            [lipo.db :as db]))
 
 (defonce server (atom nil))
 
@@ -100,31 +101,34 @@
     (do
       (log/info "CRUX already started, not restarting it.")
       old-crux)
-    (let [{:keys [postgresql lmdb-dir lucene-dir]} config]
-      (crux/start-node
-       (if postgresql
-         {:crux.jdbc/connection-pool
-          {:dialect {:crux/module 'crux.jdbc.psql/->dialect}
-           :pool-opts {}
-           :db-spec postgresql}
-          :crux/tx-log
-          {:crux/module 'crux.jdbc/->tx-log
-           :connection-pool :crux.jdbc/connection-pool
-           :poll-sleep-duration (java.time.Duration/ofSeconds 1)}
-          :crux/document-store
-          {:crux/module 'crux.jdbc/->document-store
-           :connection-pool :crux.jdbc/connection-pool}
+    (let [{:keys [postgresql lmdb-dir lucene-dir]} config
+          node
+          (crux/start-node
+           (if postgresql
+             {:crux.jdbc/connection-pool
+              {:dialect {:crux/module 'crux.jdbc.psql/->dialect}
+               :pool-opts {}
+               :db-spec postgresql}
+              :crux/tx-log
+              {:crux/module 'crux.jdbc/->tx-log
+               :connection-pool :crux.jdbc/connection-pool
+               :poll-sleep-duration (java.time.Duration/ofSeconds 1)}
+              :crux/document-store
+              {:crux/module 'crux.jdbc/->document-store
+               :connection-pool :crux.jdbc/connection-pool}
 
-          :crux/index-store
-          {:kv-store {:crux/module 'crux.lmdb/->kv-store
-                      :db-dir (io/file lmdb-dir)}}
-          :crux.lucene/lucene-store {:db-dir lucene-dir}}
+              :crux/index-store
+              {:kv-store {:crux/module 'crux.lmdb/->kv-store
+                          :db-dir (io/file lmdb-dir)}}
+              :crux.lucene/lucene-store {:db-dir lucene-dir}}
 
-         (do
-           (log/warn "################################\n"
-                     "No :postgresql in configuration, using IN-MEMORY persistence only!\n"
-                     "################################")
-           {}))))))
+             (do
+               (log/warn "################################\n"
+                         "No :postgresql in configuration, using IN-MEMORY persistence only!\n"
+                         "################################")
+               {})))]
+      (db/init-tx-fns! node)
+      node)))
 
 (defn init-server [old-server {:keys [port bind-address]
                                :or {port 3000
