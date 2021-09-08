@@ -250,7 +250,8 @@
          (partial content-db/delete! ctx)
          cancel)
 
-        (attachments ctx id)]
+        (when-not creating?
+          (attachments ctx id))]
        [:<>
         [:h1.my-3 title]
         [:p.mb-3.text-sm.font.text-gray-500
