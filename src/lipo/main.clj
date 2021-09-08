@@ -65,7 +65,7 @@
          (fn []
            (template/main-template (page-context ctx))))))))
 
-(defn app-routes [ctx]
+(defn app-routes [{auth :auth :as ctx}]
   (routes
    (attachments/attachment-routes ctx)
    (context/connection-handler "/__ripley-live" :ping-interval 45)
@@ -77,10 +77,11 @@
 
    ;; Last route, if no other route matches, this is a page path
    ;; either save it (when POST) or display it (when GET)
-   (fn [{m :request-method :as req}]
+   (fn [{m :request-method user :user :as req}]
      (let [ctx (assoc ctx :request req)]
-       (when (= m :get)
-         (render-page ctx))))
+       (when (and (= m :get) ((:can-view? auth) user))
+         (render-page (merge ctx
+                             {:can-edit? ((:can-edit? auth) user)})))))
 
    ;; Fallback, debug log requests that were not handled
    (fn [req]
