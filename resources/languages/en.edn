@@ -25,4 +25,6 @@
  :search {:placeholder "Search content..."
           :no-results "No results found"}
 
- :attachments {:add-link "Add link"}}
+ :attachments {:add-link "Add link"}
+ :user-menu {:login "Login"}
+ }

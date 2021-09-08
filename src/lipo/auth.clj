@@ -23,6 +23,12 @@
       (handler (assoc req :scheme force-request-scheme)))
     handler))
 
+(defn configure-auth
+  "Add auth configuration to context"
+  [ctx config]
+  (assoc-in ctx [:auth :login-url]
+            (some-> config :auth :oauth2 vals first :launch-uri)))
+
 (defn wrap-auth [handler {auth :auth :as _config}]
   (if (and (contains? auth :jwt)
            (contains? auth :oauth2))

@@ -24,4 +24,5 @@
 
  :search {:placeholder "Hae sisältöä..."
           :no-results "Ei tuloksia"}
- :attachments {:add-link "Lisää linkki"}}
+ :attachments {:add-link "Lisää linkki"}
+ :user-menu {:login "Kirjaudu sisään"}}

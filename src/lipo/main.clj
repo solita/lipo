@@ -129,7 +129,8 @@
   (when old-server
     (old-server))
   (let [ctx (-> {:crux @crux}
-                (attachments/configure-attachment-storage config))
+                (attachments/configure-attachment-storage config)
+                (auth/configure-auth config))
         server
         (server/run-server
          (-> (app-routes ctx)
