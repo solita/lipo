@@ -8,7 +8,9 @@
                :warning "Varoitus"
                :success "Onnistui"
                :error "Virhe"}
- :errors {:news-portlet-error "Virheellinen portlet määritelmä: "}
+ :errors {:news-portlet-error "Virheellinen portlet määritelmä: "
+          :save-failed "Lomakkeen tallentaminen epäonnistui"}
+ :messages {:save-successful "Sisältö tallennettu"}
  :fields
  {:meta/created "Luotu"
   :meta/creator "Luonut"

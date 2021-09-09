@@ -7,13 +7,15 @@
 (s/def :meta/created inst?)
 
 ;; Who saved this document (references user :xt/id)
-(s/def :meta/creator string?)
+(s/def :meta/creator (s/keys
+                       :req [:user/id]))
 
 ;; When the document was last edited
 (s/def :meta/modified inst?)
 
 ;; Who
-(s/def :meta/modifier string?)
+(s/def :meta/modifier (s/keys
+                        :req [:user/id]))
 
 (defn user-id-ref
   "Return reference to user that is saved.
