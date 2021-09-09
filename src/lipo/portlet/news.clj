@@ -55,28 +55,6 @@
        (h/dyn! (pr-str content-model/content-types))]]]))
 
 (defmethod p/render :news [{:keys [here db] :as ctx}
-<<<<<<< HEAD
-                           {:keys [type path max-items]
-                            :or {type :news
-                                 max-items 20}}]
-  (let [items (map first
-                   (db/q db
-                         (merge
-                          {:limit max-items}
-                          '{:find [(pull ?item [:xt/id
-                                                :content/title
-                                                :content/excerpt
-                                                :meta/at]) ?at]
-                            :where [[?item :content/type ?type]
-                                    [?item :meta/at ?at]]
-                            :order-by [[?at :desc]]
-                            :in [?type]})
-                         ;; FIXME: check rule that  path is ancestor of item
-                         type max-items))]
-    (h/html
-     [::h/for [item items]
-      (render-item ctx item)])))
-=======
                            {:keys [types path max-items]
                             :or {types content-model/content-types
                                  max-items 20
@@ -90,7 +68,7 @@
                   (db/q db
                     (merge
                       {:limit max-items}
-                      '{:find [(pull ?item [:crux.db/id
+                      '{:find [(pull ?item [:xt/id
                                             :content/title
                                             :content/excerpt
                                             :content/parent]) ?created]
@@ -110,4 +88,3 @@
       (h/html
         [::h/for [item items]
          (render-item ctx item)]))))
->>>>>>> e0677a778d2c5bd6b24ea25b328fb19919e0d355
