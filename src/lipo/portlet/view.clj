@@ -70,28 +70,33 @@
    })
 
 (defn text-field
-  ([name label] (text-field name label ""))
-  ([name label value]
-   (h/html
+  [{:keys [name label value required?]}]
+  (h/html
     [:div.my-3
-     [:label {:class "block" :for name} label]
-     [:input {:id name :name name :value value}]])))
+     [:label {:class "block" :for name}
+      label (h/dyn! (when required?
+                      "*"))]
+     [:input {:id name :name name :value value
+              :required required?}]]))
 
 (defn- editor-form
   "Create an editor form for updating an existing document or creating a new one."
   [{:content/keys [title excerpt body type path] :as content} save! delete! cancel]
   (h/html
    [:div
-    [:form.editor
+    [:form.editor {:on-submit ["document.getElementById('newbody').value = window.E.getData()"
+                               (js/js save! (js/form-values "form.editor")) js/prevent-default]}
      ;; Show path field when creating new sub page
      [::h/when (not path)
-      (text-field "path" (tr [:fields :content/path]))]
+      (text-field {:name "path"
+                   :label (tr [:fields :content/path])
+                   :required? true})]
 
      [:div.my-3
       [:label {:class "block" :for "type"}
        (tr! [:fields :content/type])]
-      [:select {:name "type"}
-       [:option {:value ""} " "]                            ; no type
+      [:select {:name "type"
+                :required true}
        [::h/for [t content-model/content-types
                  :let [value (name t)
                        ;; translate this
@@ -99,7 +104,10 @@
                        selected? (= t type)]]
         [:option {:value value :selected selected?} label]]]]
 
-     (text-field "title" (tr [:fields :content/title]) title)
+     (text-field {:name "title"
+                  :label (tr [:fields :content/title])
+                  :value title
+                  :required? true})
      [:div.my-3
       [:label (tr! [:fields :content/excerpt])]
       [:textarea {:name "excerpt"}
@@ -118,9 +126,7 @@
         {:on-click [cancel js/prevent-default]}
         (tr! [:buttons :cancel])]
        [:button.primary
-        {:type "submit"
-         :on-click ["document.getElementById('newbody').value = window.E.getData()"
-                    (js/js save! (js/form-values "form.editor")) js/prevent-default]}
+        {:type "submit"}
         (tr! [:buttons :save])]]]
 
      [:script

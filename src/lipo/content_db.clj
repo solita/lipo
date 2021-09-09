@@ -5,7 +5,9 @@
             [lipo.content-model :as content-model]
             [lipo.db :as db]
             [lipo.meta-model :as meta-model]
-            [lipo.user-db :as user-db]))
+            [lipo.user-db :as user-db]
+            [clojure.spec.alpha :as s]
+            [lipo.localization :refer [tr]]))
 
 (def ^:private root-path #{nil "" "/"})
 
@@ -171,29 +173,33 @@
   ;; PENDING figure out what the model for the user is
   (let [meta (if new-content?
                (meta-model/creation-meta user)
-               (meta-model/modification-meta user))]
+               (meta-model/modification-meta user))
+        save-content (merge content
+                       {:content/title title
+                        :content/body body
+                        :content/excerpt excerpt}
+                       meta
+                       (when-not (str/blank? sub-page-path)
+                         {:content/path sub-page-path})
+                       (when-not (str/blank? type)
+                         {:content/type (keyword type)}))]
     ;; PENDING: Should merge as a db function
-    (db/tx
-     xtdb
-     (user-db/ensure-user-tx user)
-     [:xtdb.api/put
-      (merge content
-             {:content/title title
-              :content/body body
-              :content/excerpt excerpt}
-             meta
-             (when-not (str/blank? sub-page-path)
-               {:content/path sub-page-path})
-             (when-not (str/blank? type)
-               {:content/type (keyword type)}))]))
-  (if sub-page?
-    ;; Go to the newly created sub page
-    (go! (path (xt/db xtdb) content))
+    (if (s/valid? :content/form-values save-content)
+      (do
+        (db/tx
+          xtdb
+          (user-db/ensure-user-tx user)
+          [:xtdb.api/put
+           save-content])
+        (if sub-page?
+          ;; Go to the newly created sub page
+          (go! (path (xt/db xtdb) content))
 
-    ;; Set flash message and set new edit state
-    (do
-      (set-flash-message! {:variant :success :message "Sisältö tallennettu."})
-      (set-edit-state! {:editing? false}))))
+          ;; Set flash message and set new edit state
+          (do
+            (set-flash-message! {:variant :success :message (tr [:messages :save-successful])})
+            (set-edit-state! {:editing? false}))))
+      (set-flash-message! {:variant :error :message (tr [:errors :save-failed])}))))
 
 (defn delete! [{:keys [xtdb go! user] :as ctx}
                 {parent :content/parent
