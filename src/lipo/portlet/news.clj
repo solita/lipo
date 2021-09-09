@@ -5,8 +5,8 @@
             [lipo.db :as db]
             [lipo.content-db :as content-db]
             [lipo.content-model :as content-model]
-            [clojure.spec.alpha :as s]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [lipo.localization :refer [tr!]]))
 
 (defn- render-item [_ctx {:content/keys [title excerpt]
                           at :meta/at
@@ -45,14 +45,9 @@
   [params]
   (h/html
     [:div.border-2.border-red-500.p-5
-     [:<>
-      [:p "Virheellinen portlet määritelmä: "
-       (h/dyn!
-         (str params))]
-      [:p "Esimerkki oikeasta määritelmästä: "
-       (h/dyn! (pr-str {:portlet/type :news :types [:memo :news] :max-items 40 :path "/polku/toinen"}))]
-      [:p "Validit tyypit: "
-       (h/dyn! (pr-str content-model/content-types))]]]))
+     [:p (tr! [:errors :news-portlet-error])
+      (h/dyn!
+        (str params))]]))
 
 (defmethod p/render :news [{:keys [here db] :as ctx}
                            {:keys [types path max-items]
@@ -83,7 +78,6 @@
                                  (ancestor ?p ?a)]]
                         :order-by [[?created :desc]]
                         :in [[?types ...] ?ancestor]})
-                    ;; FIXME: check rule that  path is ancestor of item
                     types entity-of-path))]
       (h/html
         [::h/for [item items]

@@ -8,6 +8,7 @@
                :warning "Warning"
                :success "Success"
                :error "Error"}
+ :errors {:news-portlet-error "Wrong parameters given for news portlet: "}
  :fields
  {:meta/created "Created at"
   :meta/creator "Created by"
