@@ -7,7 +7,8 @@
             [lipo.meta-model :as meta-model]
             [lipo.user-db :as user-db]
             [clojure.spec.alpha :as s]
-            [lipo.localization :refer [tr]]))
+            [lipo.localization :refer [tr]]
+            [lipo.html-sanitizer :as html-sanitizer]))
 
 (def ^:private root-path #{nil "" "/"})
 
@@ -174,6 +175,7 @@
   (let [meta (if new-content?
                (meta-model/creation-meta user)
                (meta-model/modification-meta user))
+        body (html-sanitizer/sanitize body)
         save-content (merge content
                        {:content/title title
                         :content/body body
