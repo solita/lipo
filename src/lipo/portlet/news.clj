@@ -6,7 +6,7 @@
 
 (defn- render-item [_ctx {:content/keys [title excerpt]
                           at :meta/at
-                          id :crux.db/id}]
+                          id :xt/id}]
   (let [date-time (str at)]
     (h/html
      [:div.news-item.border-b-2.border-black.mb-4
@@ -24,7 +24,7 @@
                    (db/q db
                          (merge
                           {:limit max-items}
-                          '{:find [(pull ?item [:crux.db/id
+                          '{:find [(pull ?item [:xt/id
                                                 :content/title
                                                 :content/excerpt
                                                 :meta/at]) ?at]

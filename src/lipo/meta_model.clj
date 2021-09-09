@@ -6,7 +6,7 @@
 ;; When was this document saved written (time at node when it submitted the tx)
 (s/def :meta/created inst?)
 
-;; Who saved this document (references user :crux.db/id)
+;; Who saved this document (references user :xt/id)
 (s/def :meta/creator string?)
 
 ;; When the document was last edited
@@ -17,7 +17,7 @@
 
 (defn user-id-ref
   "Return reference to user that is saved.
-  User :crux.db/id values are maps of {:user/id \"someuser\"}."
+  User :xt/id values are maps of {:user/id \"someuser\"}."
   [user]
   {:pre [(some? (:user/id user))]}
   (select-keys user [:user/id]))

@@ -1,6 +1,6 @@
 (ns lipo.portlet.search
   "Search portlet that lists content matching user input.
-  Uses the crux lucene module."
+  Uses the XTDB lucene module."
   (:require [lipo.db :as db]
             [lipo.portlet :as p]
             [lipo.content-db :as content-db]
@@ -14,7 +14,7 @@
             [re-html-template.core :refer [html]]))
 
 (defn- result-view [{db :db go! :go! :as _ctx}
-                    {id :crux.db/id
+                    {id :xt/id
                      :content/keys [title excerpt]}]
   (let [link (content-db/path db id)
         excerpt (if (> (count excerpt)
@@ -45,7 +45,7 @@
         [:p.w-full (tr! [:search :no-results])]]]
       [:div
        (collection/live-collection {:container-element :div
-                                    :key :crux.db/id
+                                    :key :xt/id
                                     :source results-source
                                     :render (partial result-view ctx)})]]]]))
 
@@ -58,7 +58,7 @@
 (defn- search [db term set-state!]
   (db/q-async
    db
-   '{:find [(pull ?e [:crux.db/id :content/title :content/excerpt]) ?s]
+   '{:find [(pull ?e [:xt/id :content/title :content/excerpt]) ?s]
      :where [[(wildcard-text-search ?term) [[?e _ _ ?s]]]]
      :order-by [[?s :desc]]
      :in [?term]}

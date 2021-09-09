@@ -41,7 +41,7 @@
 
      :h3 {:replace-children (some-> path path-id titles h/dyn!)}
 
-     :a {:for {:item {id :crux.db/id title :content/title :as c}
+     :a {:for {:item {id :xt/id title :content/title :as c}
                :items (some-> path path-id content)}
          :set-attributes {:href (or (content-path path c) "")
                           :on-click [(partial go! (content-path path c))

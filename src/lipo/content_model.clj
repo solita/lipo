@@ -3,7 +3,7 @@
   (:require [clojure.spec.alpha :as s]))
 
 (def root-page-id
-  "The :crux.db/id value of the root page, all top level page will have this as :content/parent."
+  "The :xt/id value of the root page, all top level page will have this as :content/parent."
   "root")
 
 (def content-types #{:news :memo :page})
@@ -16,7 +16,7 @@
 (s/def :content/title string?)
 (s/def :content/body string?)
 (s/def :content/excerpt string?) ; short excerpt text for content
-(s/def :content/parent string?) ; references :crux.db/id of other document
+(s/def :content/parent string?) ; references :xt/id of other document
 (s/def :content/keywords (s/coll-of string?))
 (s/def :content/published inst?) ; publish date
 (s/def :content/expires inst?) ; when content expires (not published any more)

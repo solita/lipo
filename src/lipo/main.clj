@@ -3,7 +3,7 @@
             [org.httpkit.client :as htclient]
             [compojure.core :refer [routes GET POST]]
             [compojure.route :as route]
-            [crux.api :as crux]
+            [xtdb.api :as xt]
             [ripley.html :as h]
             [ripley.live.context :as context]
             [taoensso.timbre :as log]
@@ -38,7 +38,7 @@
 
 
 
-(defn page-context [{:keys [request crux] :as ctx}]
+(defn page-context [{:keys [request xtdb] :as ctx}]
   ;; FIXME: should this have a protocol or at least
   ;; well documented keys
   (let [[source set-msg!] (source/use-state nil)
@@ -46,7 +46,7 @@
     (merge ctx
            {:here (:uri request)
             :here-source here-source
-            :db (crux/db crux)
+            :db (xt/db xtdb)
 
             ;; Pages can use go! to send user's browser to a page
             :go! set-here!
@@ -95,33 +95,33 @@
 (defn load-config []
   (-> "config.edn" slurp read-string))
 
-(def crux (atom nil))
+(def xtdb (atom nil))
 
-(defn init-crux [old-crux config]
-  (if old-crux
+(defn init-xtdb [old-xtdb config]
+  (if old-xtdb
     (do
-      (log/info "CRUX already started, not restarting it.")
-      old-crux)
+      (log/info "XTDB already started, not restarting it.")
+      old-xtdb)
     (let [{:keys [postgresql lmdb-dir lucene-dir]} config
           node
-          (crux/start-node
+          (xt/start-node
            (if postgresql
-             {:crux.jdbc/connection-pool
-              {:dialect {:crux/module 'crux.jdbc.psql/->dialect}
+             {:xtdb.jdbc/connection-pool
+              {:dialect {:xtdb/module 'xtdb.jdbc.psql/->dialect}
                :pool-opts {}
                :db-spec postgresql}
-              :crux/tx-log
-              {:crux/module 'crux.jdbc/->tx-log
-               :connection-pool :crux.jdbc/connection-pool
+              :xtdb/tx-log
+              {:xtdb/module 'xtdb.jdbc/->tx-log
+               :connection-pool :xtdb.jdbc/connection-pool
                :poll-sleep-duration (java.time.Duration/ofSeconds 1)}
-              :crux/document-store
-              {:crux/module 'crux.jdbc/->document-store
-               :connection-pool :crux.jdbc/connection-pool}
+              :xtdb/document-store
+              {:xtdb/module 'xtdb.jdbc/->document-store
+               :connection-pool :xtdb.jdbc/connection-pool}
 
-              :crux/index-store
-              {:kv-store {:crux/module 'crux.lmdb/->kv-store
+              :xtdb/index-store
+              {:kv-store {:xtdb/module 'xtdb.lmdb/->kv-store
                           :db-dir (io/file lmdb-dir)}}
-              :crux.lucene/lucene-store {:db-dir lucene-dir}}
+              :xtdb.lucene/lucene-store {:db-dir lucene-dir}}
 
              (do
                (log/warn "################################\n"
@@ -137,7 +137,7 @@
                                :as config}]
   (when old-server
     (old-server))
-  (let [ctx (-> {:crux @crux}
+  (let [ctx (-> {:xtdb @xtdb}
                 (attachments/configure-attachment-storage config)
                 (auth/configure-auth config))
         server
@@ -168,7 +168,7 @@
    (let [config (merge-config (load-config) env-config-map)
          _ (log/info "pg connection map:" (assoc (:postgresql config) :password "<redacted>"))]
      (def *config config) ; debug: store full config for repl use
-     (swap! crux init-crux config)
+     (swap! xtdb init-xtdb config)
      (swap! server init-server config))))
 
 

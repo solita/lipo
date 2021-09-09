@@ -1,7 +1,7 @@
 (ns lipo.attachments
   "Upload and download of attachments (images and files).
-  Bytes are stored to S3, metadata to CRUX"
-  (:require [crux.api :as crux]
+  Bytes are stored to S3, metadata to XTDB"
+  (:require [xtdb.api :as xt]
             [compojure.core :refer [POST GET routes]]
             [cheshire.core :as cheshire]
             [ring.middleware.multipart-params :as multipart-params]
@@ -55,15 +55,15 @@
     (io/delete-file (io/file path (str id)))))
 
 
-(defn- upload [{storage ::storage :keys [crux request]}]
+(defn- upload [{storage ::storage :keys [xtdb request]}]
   (def *req request)
   (if-let [upload (get-in request [:multipart-params "upload"])]
     (let [id (UUID/randomUUID)]
       (put-object storage id (:tempfile upload))
-      (db/tx crux
-             [:crux.tx/put
+      (db/tx xtdb
+             [:xtdb.api/put
               (merge
-               {:crux.db/id id
+               {:xt/id id
                 :file/name (:filename upload)
                 :file/size (:size upload)
                 :file/content-type (:content-type upload)}
@@ -81,10 +81,10 @@
      :body (cheshire/encode
             {:error {:message "No file to upload"}})}))
 
-(defn- download [{storage ::storage :keys [crux request]}]
+(defn- download [{storage ::storage :keys [xtdb request]}]
   (let [id (some-> request :params (get "id") UUID/fromString)
         {:file/keys [content-type]} (when id
-                                      (crux/entity (crux/db crux) id))]
+                                      (xt/entity (xt/db xtdb) id))]
     (if (and id content-type)
       {:status 200
        :headers {"Content-Type" content-type}
@@ -121,9 +121,9 @@
 
 
 (defn delete!
-  "Delete file metadata from CRUX and the file bytes from storage."
-  [{storage ::storage crux :crux} id]
+  "Delete file metadata from XTDB and the file bytes from storage."
+  [{storage ::storage xtdb :xtdb} id]
   {:pre [(uuid? id)]}
-  (db/tx crux [:crux.tx/delete id])
+  (db/tx xtdb [:xtdb.api/delete id])
   (delete-object storage id)
   :ok)

@@ -1,18 +1,18 @@
 (ns user
   (:require lipo.main
-            [crux.api :as crux]
+            [xtdb.api :as xt]
             [lipo.db :as db]))
 
 (defn db []
-  (crux/db @lipo.main/crux))
+  (xt/db @lipo.main/xtdb))
 
 (defn tx [& ops]
-  (apply db/tx @lipo.main/crux ops))
+  (apply db/tx @lipo.main/xtdb ops))
 
 (defn q [& args]
-  (apply crux/q (db) args))
+  (apply xt/q (db) args))
 
-(defn crux []
-  @lipo.main/crux)
+(defn xtdb []
+  @lipo.main/xtdb)
 
 (def start lipo.main/start)

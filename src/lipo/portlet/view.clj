@@ -14,7 +14,7 @@
             [lipo.content-db :as content-db]
             [lipo.format :as format]
             [ripley.html :as h]
-            [crux.api :as crux]
+            [xtdb.api :as xt]
             [ripley.live.source :as source]
             [lipo.content-model :as content-model]
             [cheshire.core :as cheshire]
@@ -180,21 +180,21 @@
    {:file "templates/attachments.html" :selector "tbody tr"}
 
    {:href "download-link"} {:set-attributes
-                            {:href (str "/_img?id=" (:crux.db/id row))}}
+                            {:href (str "/_img?id=" (:xt/id row))}}
    "data-field"
    {:let-attrs {f :data-field}
     :replace-children (some->> f keyword (get row) format/display h/dyn!)}
 
    :button.delete-attachment
-   {:set-attributes {:on-click #(attachments/delete! ctx (:crux.db/id row))}}))
+   {:set-attributes {:on-click #(attachments/delete! ctx (:xt/id row))}}))
 
 (defn- attachments
   "Manage attachments added to this page."
   [ctx id]
-  (let [attachments (db/q-source (:crux ctx)
+  (let [attachments (db/q-source (:xtdb ctx)
                                  '{:find [(pull ?f [:file/name :file/size
                                                     :meta/created
-                                                    :crux.db/id])]
+                                                    :xt/id])]
                                    :where [[?f :file/content ?id]]
                                    :in [?id]}
                                  id)]
@@ -202,23 +202,23 @@
      {:file "templates/attachments.html" :selector "div.attachments"}
      :tbody {:replace
              (collection/live-collection
-              {:key :crux.db/id
+              {:key :xt/id
                :container-element :tbody
                :render (partial attachments-row ctx)
                :source (source/c= (mapv first %attachments))})}
      {:name "content-id"} {:set-attributes
                            {:value (str id)}})))
 
-(defn- view-or-edit-content [{:keys [crux] :as ctx}
+(defn- view-or-edit-content [{:keys [xtdb] :as ctx}
                              path can-edit?
                              set-edit-state!
                              {:keys [editing? sub-page? creating?] :as edit-state}]
-  (let [db (crux/db crux) ; take fresh db on each render
+  (let [db (xt/db xtdb) ; take fresh db on each render
         id (content-db/content-id db path)
         {:content/keys [title body excerpt]
          :meta/keys [modifier modified
                      creator created] :as content}
-        (crux/entity db id)
+        (xt/entity db id)
         created-formatted (format/display created)
         modified-formatted (format/display modified)
         cancel #(set-edit-state! {:editing? false
@@ -239,7 +239,7 @@
         [:button.secondary.small
          {:on-click #(set-edit-state! {:creating? true
                                        :sub-page? true
-                                       :content {:crux.db/id (UUID/randomUUID)
+                                       :content {:xt/id (UUID/randomUUID)
                                                  :content/parent id}})}
          (tr! [:buttons :create-sub-page])]]]
       [::h/if (or editing? creating?)
@@ -272,7 +272,7 @@
       ;; Show raw content (body only)
       (h/html
        [:div.content-view.ck-content
-        (h/out! (:content/body (crux/entity db (content-db/content-id db path))))])
+        (h/out! (:content/body (xt/entity db (content-db/content-id db path))))])
 
       ;; So content with all the bells and whistles and edit UI
       (let [can-edit? (and inline-edit? can-edit?)

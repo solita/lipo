@@ -12,7 +12,7 @@
             [lipo.db :as db]
             [clojure.string :as str]
             [taoensso.timbre :as log]
-            [crux.api :as crux]
+            [xtdb.api :as xt]
             [clojure.pprint :as pprint]))
 
 (defn- with-id [req token func]
@@ -26,7 +26,7 @@
       {:status 400
        :body "Illegal doc id"})))
 
-(defn admin-routes [{crux :crux :as ctx}]
+(defn admin-routes [{xtdb :xtdb :as ctx}]
   (let [token (System/getenv "LIPO_ADMIN_TOKEN")]
     (if (str/blank? token)
       (do
@@ -43,7 +43,7 @@
                                        (catch Throwable t
                                          (log/warn t "Unable to parse body of document to PUT")
                                          nil))]
-                   (db/tx crux [:crux.tx/put (merge payload {:crux.db/id %})])
+                   (db/tx xtdb [:xtdb.api/put (merge payload {:xt/id %})])
                    {:status 400
                     :body "Unable to parse body of document to PUT"})))
 
@@ -54,4 +54,4 @@
                   {:status 200
                    :headers {"Content-Type" "text/edn"}
                    :body (with-out-str
-                           (pprint/pprint (db/entity (crux/db crux) id)))}))))))))
+                           (pprint/pprint (db/entity (xt/db xtdb) id)))}))))))))

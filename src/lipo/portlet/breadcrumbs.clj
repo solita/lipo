@@ -10,8 +10,8 @@
     (let [segments (conj (content-db/parents-of db id) id)
           paths (into {}
                       (comp (map first)
-                            (map (juxt :crux.db/id identity)))
-                      (db/q db '{:find [(pull ?id [:crux.db/id :content/path :content/title])]
+                            (map (juxt :xt/id identity)))
+                      (db/q db '{:find [(pull ?id [:xt/id :content/path :content/title])]
                                  :in [[?id ...]]}
                             segments))]
 

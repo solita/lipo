@@ -140,7 +140,7 @@
 (defn tr-enum [kw-or-map-with-db-ident]
   (let [kw (if (keyword? kw-or-map-with-db-ident)
              kw-or-map-with-db-ident
-             (:crux.db/id kw-or-map-with-db-ident))]
+             (:xt/id kw-or-map-with-db-ident))]
     (tr [:enum kw])))
 
 (let [warn (memoize (fn [msg]

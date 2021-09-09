@@ -1,22 +1,22 @@
 (ns lipo.db
-  "CRUX db utilities"
-  (:require [crux.api :as crux]
+  "XTDB db utilities"
+  (:require [xtdb.api :as xt]
             [taoensso.timbre :as log]
             [ripley.live.source :as source]
             [ripley.live.protocols :as lp]))
 
-(def db crux/db)
+(def db xt/db)
 
 (defn tx
   "Submit tx with the given tx operations. Waits until tx is processed by this node."
-  [crux & tx-ops]
-  (let [tx (crux/submit-tx crux (vec tx-ops))]
-    (crux/await-tx crux tx)))
+  [xtdb & tx-ops]
+  (let [tx (xt/submit-tx xtdb (vec tx-ops))]
+    (xt/await-tx xtdb tx)))
 
 (defn q
-  "Wrapper for [[crux.api/q]]."
+  "Wrapper for [[xtdb.api/q]]."
   [db & args]
-  (apply crux/q db args))
+  (apply xt/q db args))
 
 (defn q-async
   "Run query asynchronously in another thread and call
@@ -31,21 +31,21 @@
         args (butlast args-and-cb)]
     (future
       (try
-        (cb (apply crux/q db args))
+        (cb (apply xt/q db args))
         (catch Throwable t
           (log/warn t "Exception in async query"))))))
 
 (defn q-source
   "Ripley source for a query. Updates automatically if new transactions."
-  [crux & args]
-  (let [q #(apply crux/q (crux/db crux) args)
+  [xtdb & args]
+  (let [q #(apply xt/q (xt/db xtdb) args)
         last-value (atom (q))
-        crux-listener (atom nil)
+        xtdb-listener (atom nil)
         [source _listeners]
         (source/source-with-listeners #(deref last-value)
-                                      #(-> crux-listener deref .close))]
-    (reset! crux-listener
-            (crux/listen crux {:crux/event-type :crux/indexed-tx}
+                                      #(-> xtdb-listener deref .close))]
+    (reset! xtdb-listener
+            (xt/listen xtdb {:xt/event-type :xt/indexed-tx}
                          (fn [& _]
                            (let [new-value (q)]
                              (reset! last-value new-value)
@@ -53,14 +53,14 @@
     source))
 
 (defn entity [db id]
-  (crux/entity db id))
+  (xt/entity db id))
 
 (defn delete!
   "Convenience for deleting documents."
-  [crux & ids]
-  (apply tx crux
+  [xtdb & ids]
+  (apply tx xtdb
          (map (fn [id]
-                [:crux.tx/delete id])
+                [:xtdb.api/delete id])
               ids)))
 
 
@@ -73,12 +73,12 @@
 
 (defn init-tx-fns!
   "Initialize all tx fns. Submits new txs to create any missing functions."
-  [crux]
+  [xtdb]
   (let [tx-fns @tx-fns
         existing-fns (into {}
-                           (q (crux/db crux)
+                           (q (xt/db xtdb)
                               '[:find ?id ?fn
-                                :where [?id :crux.db/fn ?fn]
+                                :where [?id :xt/fn ?fn]
                                 :in [?id ...]]
                               (keys tx-fns)))
         changed-or-new-fns
@@ -87,7 +87,7 @@
                         (not= body (get existing-fns name))))
               tx-fns)]
     (when (seq changed-or-new-fns)
-      (apply tx crux
+      (apply tx xtdb
              (for [[name body] changed-or-new-fns]
-               [:crux.tx/put {:crux.db/id name
-                              :crux.db/fn body}])))))
+               [:xtdb.api/put {:xt/id name
+                               :xt/fn body}])))))

@@ -1,6 +1,6 @@
 (ns lipo.content-db
   "Queries and transactions for content pages."
-  (:require [crux.api :as crux]
+  (:require [xtdb.api :as xt]
             [clojure.string :as str]
             [lipo.content-model :as content-model]
             [lipo.db :as db]
@@ -17,17 +17,17 @@
   {:pre [(or
           (content-id? content-id-or-entity)
           (and (map? content-id-or-entity)
-               (content-id? (:crux.db/id content-id-or-entity))))]}
+               (content-id? (:xt/id content-id-or-entity))))]}
   (if (content-id? content-id-or-entity)
     content-id-or-entity
-    (:crux.db/id content-id-or-entity)))
+    (:xt/id content-id-or-entity)))
 
 (defn paths-with-children
   "Given a sequence of paths return a set of those paths that have children."
   [db paths]
   (into #{}
         (map first)
-        (crux/q db '[:find ?parent ?c :where [?c :content/parent ?parent]
+        (xt/q db '[:find ?parent ?c :where [?c :content/parent ?parent]
                      :in [?parent ...]] paths)))
 
 (declare content-id)
@@ -58,8 +58,8 @@
                      '[?c :content/type ?type])
         results
         (->>
-         (crux/q db
-                 {:find '[(pull ?c [:crux.db/id
+         (xt/q db
+                 {:find '[(pull ?c [:xt/id
                                     :content/path :content/title
                                     :content/parent :content/type])]
                   :where (filterv
@@ -73,9 +73,9 @@
          (sort-by :content/title))]
 
     (if check-children?
-      (let [children? (paths-with-children db (map :crux.db/id results))]
+      (let [children? (paths-with-children db (map :xt/id results))]
         (for [r results]
-          (assoc r :content/has-children? (contains? children? (:crux.db/id r)))))
+          (assoc r :content/has-children? (contains? children? (:xt/id r)))))
       results)))
 
 
@@ -84,7 +84,7 @@
   [db path]
   (some?
    (ffirst
-    (crux/q db '[:find ?c :limit 1 :where [?c :content/parent ?parent]
+    (xt/q db '[:find ?c :limit 1 :where [?c :content/parent ?parent]
                  :in ?parent] path))))
 
 
@@ -94,7 +94,7 @@
   [db content]
   (loop [parents (list)
          here content]
-    (if-let [parent (:content/parent (crux/pull db [:content/parent] here))]
+    (if-let [parent (:content/parent (xt/pull db [:content/parent] here))]
       (recur (cons parent parents) parent)
       (vec parents))))
 
@@ -133,7 +133,7 @@
                               `[[~csym :content/parent ~psym]
                                 [~csym :content/path ~path]]))
                           parent-child))}]
-      (ffirst (apply crux/q db
+      (ffirst (apply xt/q db
                      query
                      components)))
 
@@ -147,7 +147,7 @@
   (let [id (content-ref content)
         segments (conj (parents-of db id) id)
         paths (into {}
-                    (crux/q db
+                    (xt/q db
                             '{:find [?id ?path]
                               :where [[?id :content/path ?path]]
                               :in [[?id ...]]}
@@ -158,10 +158,10 @@
 (defn page-entity
   "Pull page entity by id or path."
   [db content-path-or-id]
-  (crux/entity db (content-id db content-path-or-id)))
+  (xt/entity db (content-id db content-path-or-id)))
 
 
-(defn save! [{:keys [crux set-flash-message! go! user] :as ctx}
+(defn save! [{:keys [xtdb set-flash-message! go! user] :as ctx}
              set-edit-state!
              sub-page?
              new-content?
@@ -174,9 +174,9 @@
                (meta-model/modification-meta user))]
     ;; PENDING: Should merge as a db function
     (db/tx
-     crux
+     xtdb
      (user-db/ensure-user-tx user)
-     [:crux.tx/put
+     [:xtdb.api/put
       (merge content
              {:content/title title
               :content/body body
@@ -188,18 +188,18 @@
                {:content/type (keyword type)}))]))
   (if sub-page?
     ;; Go to the newly created sub page
-    (go! (path (crux/db crux) content))
+    (go! (path (xt/db xtdb) content))
 
     ;; Set flash message and set new edit state
     (do
       (set-flash-message! {:variant :success :message "Sisältö tallennettu."})
       (set-edit-state! {:editing? false}))))
 
-(defn delete! [{:keys [crux go! user] :as ctx}
+(defn delete! [{:keys [xtdb go! user] :as ctx}
                 {parent :content/parent
-                 id :crux.db/id}]
-  (let [parent-path (path (crux/db crux) parent)]
-    (db/tx crux
+                 id :xt/id}]
+  (let [parent-path (path (xt/db xtdb) parent)]
+    (db/tx xtdb
            (user-db/ensure-user-tx user)
-           [:crux.tx/delete id])
+           [:xtdb.api/delete id])
     (go! parent-path)))

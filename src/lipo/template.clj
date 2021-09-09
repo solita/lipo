@@ -63,8 +63,8 @@
                :selector "[data-tpl='flash-message-warning']"}
               :div.alert-description {:replace-children message})))]))
 
-(defn- lipo-content [{crux :crux :as ctx} here]
-  (let [db (db/db crux)
+(defn- lipo-content [{xtdb :xtdb :as ctx} here]
+  (let [db (db/db xtdb)
         page (content-db/page-entity db here)
         portlets-by-slot (p/portlets-by-slot db page)
         ctx (assoc ctx
