@@ -9,7 +9,8 @@
             [cognitect.aws.client.api :as aws]
             [taoensso.timbre :as log]
             [lipo.db :as db]
-            [lipo.meta-model :as meta-model])
+            [lipo.meta-model :as meta-model]
+            [lipo.content-model :as content-model])
   (:import (java.util UUID)))
 
 (def ^:private s3-client (delay (aws/client {:api :s3})))
@@ -55,8 +56,7 @@
     (io/delete-file (io/file path (str id)))))
 
 
-(defn- upload [{storage ::storage :keys [xtdb request]}]
-  (def *req request)
+(defn- upload [{storage ::storage :keys [xtdb request user]}]
   (if-let [upload (get-in request [:multipart-params "upload"])]
     (let [id (UUID/randomUUID)]
       (put-object storage id (:tempfile upload))
@@ -67,9 +67,11 @@
                 :file/name (:filename upload)
                 :file/size (:size upload)
                 :file/content-type (:content-type upload)}
-               (meta-model/creation-meta "FIXME:user")
+               (meta-model/creation-meta user)
                (when-let [content-id (get-in request [:multipart-params "content-id"])]
-                 {:file/content (java.util.UUID/fromString content-id)}))])
+                 {:file/content (if (= content-id content-model/root-page-id)
+                                  content-id
+                                  (java.util.UUID/fromString content-id))}))])
       {:status 200
        :headers {"Content-Type" "application/json"}
        :body (cheshire/encode
@@ -106,18 +108,23 @@
         (log/info "Using local file system attachment storage.")
         (->LocalAttachmentStorage "resources/public/")))}))
 
+(defn- attachment-ctx [ctx req]
+  (merge ctx
+         {:request req
+          :user (get-in req [:session :lipo.auth/user])}))
+
 (defn attachment-routes
   "Return route handlers for attachment upload/download."
   [ctx]
   (multipart-params/wrap-multipart-params
    (routes
     (POST "/_upload" req
-          (upload (assoc ctx :request req)))
+          (upload (attachment-ctx ctx req)))
     (GET "/_attachment" req
-         (download (assoc ctx :request req)))
+         (download (attachment-ctx ctx req)))
     ;; Support image as well
     (GET "/_img" req
-         (download (assoc ctx :request req))))))
+         (download (attachment-ctx ctx req))))))
 
 
 (defn delete!
