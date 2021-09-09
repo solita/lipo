@@ -76,12 +76,14 @@
 
      "data-portlet-slot"
      {:let-attrs {slot :data-portlet-slot}
+      :remove-attributes #{:data-portlet-slot}
       :replace-children
       (doseq [p (portlets-by-slot (keyword "portlets" slot))]
         (p/render ctx p))}
 
      "data-portlet"
      {:let-attrs {portlet :data-portlet}
+      :remove-attributes #{:data-portlet}
       :replace-children (p/render ctx (binding [*read-eval* false]
                                         (read-string portlet)))})))
 
