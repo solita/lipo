@@ -45,7 +45,7 @@
         (source/source-with-listeners #(deref last-value)
                                       #(-> xtdb-listener deref .close))]
     (reset! xtdb-listener
-            (xt/listen xtdb {:xt/event-type :xt/indexed-tx}
+            (xt/listen xtdb {:xtdb.api/event-type :xtdb.api/indexed-tx}
                          (fn [& _]
                            (let [new-value (q)]
                              (reset! last-value new-value)
