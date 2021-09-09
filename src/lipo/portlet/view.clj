@@ -87,7 +87,7 @@
     [:form.editor {:on-submit ["document.getElementById('newbody').value = window.E.getData()"
                                (js/js save! (js/form-values "form.editor")) js/prevent-default]}
      ;; Show path field when creating new sub page
-     [::h/when (not path)
+     [::h/when (and (not path) (not= (:xt/id content) "root"))
       (text-field {:name "path"
                    :label (tr [:fields :content/path])
                    :required? true})]
