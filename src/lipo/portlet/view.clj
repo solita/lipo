@@ -186,7 +186,9 @@
     :replace-children (some->> f keyword (get row) format/display h/dyn!)}
 
    :button.delete-attachment
-   {:set-attributes {:on-click #(attachments/delete! ctx (:xt/id row))}}))
+   {:set-attributes {:on-click (js/js #(when %
+                                         (attachments/delete! ctx (:xt/id row)))
+                                      (str "confirm('" (tr [:attachments :confirm-delete])  "')"))}}))
 
 (defn- attachments
   "Manage attachments added to this page."
