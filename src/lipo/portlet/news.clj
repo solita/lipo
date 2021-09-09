@@ -78,7 +78,6 @@
                                  (ancestor ?p ?a)]]
                         :order-by [[?created :desc]]
                         :in [[?types ...] ?ancestor]})
-                    ;; FIXME: check rule that  path is ancestor of item
                     types entity-of-path))]
       (h/html
         [::h/for [item items]
