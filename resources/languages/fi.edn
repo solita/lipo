@@ -8,6 +8,7 @@
                :warning "Varoitus"
                :success "Onnistui"
                :error "Virhe"}
+ :errors {:news-portlet-error "Virheellinen portlet määritelmä: "}
  :fields
  {:meta/created "Luotu"
   :meta/creator "Luonut"
