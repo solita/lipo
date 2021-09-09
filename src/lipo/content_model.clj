@@ -10,6 +10,8 @@
 
 (s/def :content/type content-types)
 
+(def uri-path-pattern #"^(\/[\d\w\-_]+)+$")
+
 (def path-pattern #"^[\d\w\-_]+$")
 
 (s/def :content/path (s/and string? #(re-matches path-pattern %))) ; relative path in parent
