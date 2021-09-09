@@ -6,32 +6,21 @@
             [lipo.content-db :as content-db]
             [lipo.content-model :as content-model]
             [clojure.set :as set]
-            [lipo.localization :refer [tr!]]))
+            [lipo.localization :refer [tr!]]
+            [lipo.format :as format]))
 
-(defn- render-item [_ctx {:content/keys [title excerpt]
-                          at :meta/at
-                          id :xt/id}]
-  (let [date-time (str at)]
-    (h/html
-     [:div.news-item.border-b-2.border-black.mb-4
-      [:a {:href id ;; FIXME: change that path != id
-           }
-       title]
-      [:div.at date-time]
-      [:div.excerpt excerpt]])))
-
-(comment
-  '{:find [?anc ?parent]
-    :where [(ancestor ?content ?anc)
-            [?anc :content/parent ?parent]]
-    :in [?content]
-    :rules [[(ancestor ?c ?a)
-             [(== ?c ?a)]]
-            [(ancestor ?c ?a)
-             [?c :content/parent ?a]]
-            [(ancestor ?c ?a)
-             [?c :content/parent ?p]
-             (ancestor ?p ?a)]]})
+(defn- render-item [{:keys [db] :as ctx}
+                    {:content/keys [title excerpt]
+                     created :meta/created
+                     id :xt/id
+                     :as content}]
+  (h/html
+    [:div.news-item.border-b-2.border-gray-500.mb-4
+     [:a.text-xl {:href (content-db/path db content)}
+      title]
+     [:span.text-xs.text-gray-600.inline-block.ml-2
+      (h/dyn! (format/display created))]
+     [:p.excerpt excerpt]]))
 
 (defn valid-params?
   [{:keys [types path max-items]}]
@@ -49,8 +38,8 @@
       (h/dyn!
         (str params))]]))
 
-(defmethod p/render :news [{:keys [here db] :as ctx}
-                           {:keys [types path max-items]
+(defmethod p/render :news [{:keys [db] :as ctx}
+                           {:keys [types title path max-items]
                             :or {types content-model/content-types
                                  max-items 20
                                  path content-model/root-page-id}
@@ -58,7 +47,6 @@
   (if-not (valid-params? params)
     (news-portlet-invalid-params params)
     (let [entity-of-path (content-db/content-id db path)
-
           items (map first
                   (db/q db
                     (merge
@@ -66,7 +54,8 @@
                       '{:find [(pull ?item [:xt/id
                                             :content/title
                                             :content/excerpt
-                                            :content/parent]) ?created]
+                                            :content/parent
+                                            :meta/created]) ?created]
                         :where
                         [[?item :content/type ?types]
                          [?item :meta/created ?created]
@@ -80,5 +69,8 @@
                         :in [[?types ...] ?ancestor]})
                     types entity-of-path))]
       (h/html
-        [::h/for [item items]
-         (render-item ctx item)]))))
+        [:div
+         [::h/when title
+          [:h2.mb-4 title]]
+         [::h/for [item items]
+          (render-item ctx item)]]))))
