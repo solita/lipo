@@ -49,17 +49,12 @@
                                     :source results-source
                                     :render (partial result-view ctx)})]]]]))
 
-(def search-priority-by-attribute
-  {:content/title 1
-   :content/excerpt 2
-   :content/body 3
-   :content/path 4})
-
 (defn- search [db term set-state!]
   (db/q-async
    db
    '{:find [(pull ?e [:xt/id :content/title :content/excerpt]) ?s]
-     :where [[(wildcard-text-search ?term) [[?e _ _ ?s]]]]
+     :where [[(wildcard-text-search ?term) [[?e _ _ ?s]]]
+             [?e :content/title _]]
      :order-by [[?s :desc]]
      :in [?term]}
    term
