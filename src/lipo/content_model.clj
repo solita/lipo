@@ -19,11 +19,23 @@
 (s/def :content/title (s/and string? #(not (str/blank? %))))
 (s/def :content/body string?)
 (s/def :content/excerpt string?) ; short excerpt text for content
-(s/def :content/parent uuid?) ; references :xt/id of other document
+(s/def :content/parent (s/or
+                         :uuid
+                         uuid?
+                         :root                              ;; Only root page has the id of "root" others are UUID
+                         #(= root-page-id %)))                          ; references :xt/id of other document
+
+
 (s/def :content/keywords (s/coll-of string?))
 (s/def :content/published inst?) ; publish date
 (s/def :content/expires inst?) ; when content expires (not published any more)
 
-(s/def :content/form-values (s/keys
-                              :req [:content/title :content/path :content/type]
-                              :opt [:content/excerpt :content/body]))
+(s/def :content/form-values (s/and
+                              (s/keys
+                                :req [:content/title :content/type]
+                                :opt [:content/excerpt :content/body])
+                              (fn [{:content/keys [path]
+                                    id :xt/id}]
+                                (or
+                                  (= id root-page-id)
+                                  (not (str/blank? path))))))
