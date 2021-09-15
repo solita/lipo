@@ -1,7 +1,15 @@
 <div class="user-menu">
   <div class="logged-in flex items-center ml-4">
-    <img class="gravatar pr-2"/>
+    <img class="gravatar pr-2 max-w-none" alt="Käyttäjän avatar"/>
     <span class="user-initials">JD</span>
+    <div class="ml-2 user-hover-menu">
+      <span data-glyph="chevron-bottom" class="oi" tabindex="0"></span>
+      <div class="dropdown-container">
+        <a href="/logout" class="dropdown-option">
+          Logout
+        </a>
+      </div>
+    </div>
   </div>
   <div class="unauthenticated">
     <a href="login url">{{:user-menu :login}}</a>

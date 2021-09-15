@@ -42,6 +42,15 @@
       (handler (assoc req :scheme force-request-scheme)))
     handler))
 
+(defn- wrap-fake-user
+  [handler fake-user-name]
+  (fn [req]
+    (let [split-name (clojure.string/split fake-user-name #"\s+")]
+      (handler (assoc req :user {:user/id 42
+                                 :user/email (str "\"" fake-user-name "\"@example.com")
+                                 :user/given-name (first split-name)
+                                 :user/family-name (last split-name)})))))
+
 (defn configure-auth
   "Add auth configuration to context"
   [ctx {auth :auth :as config}]
@@ -76,7 +85,7 @@
 
    handler))
 
-(defn wrap-auth [handler {auth :auth :as _config}]
+(defn wrap-auth [handler {auth :auth fake-user :fake-user :as _config}]
   (if (and (contains? auth :jwt)
            (contains? auth :oauth2))
     (-> handler
@@ -86,6 +95,8 @@
         (oauth2/wrap-oauth2 (:oauth2 auth))
         (wrap-force-request-scheme (:force-request-scheme auth))
         (wrap-logout-paths auth))
-    (do
-      (log/warn "No OAuth2 and JWT configuration.")
-      handler)))
+    (if fake-user
+      (wrap-fake-user handler fake-user)
+      (do
+        (log/warn "No OAuth2 and JWT configuration.")
+        handler))))

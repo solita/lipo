@@ -12,7 +12,6 @@
            (.update (.getBytes s "UTF-8")))))))
 
 (defmethod p/render :user-menu [{{user :user} :request :as ctx} _]
-  (def *u user)
   (if (seq user)
     (let [hash (or (some->> user :user/email str/lower-case md5) "")
           gravatar-url (format "https://www.gravatar.com/avatar/%s?size=32&d=mp" hash)
