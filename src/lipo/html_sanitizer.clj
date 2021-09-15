@@ -22,7 +22,11 @@
 
       ;; Sanitizer is too strict, we DO want to allow {{...edn...}} in content
       ;; that is read in as maps.
-      (str/replace "{<!-- -->{" "{{" )
-
-      ;; also allow real doublequote
-      (str/replace "&#34;" "\"")))
+      ;;
+      ;; sanitizer adds HTML comment between opening braces and turns double quotes
+      ;; to HTML entities.
+      (str/replace #"\{<!-- -->\{(.+)?\}\}"
+                   (fn [[_ edn]]
+                     (-> (str "{{" edn "}}")
+                         ;; allow real doublequote
+                         (str/replace "&#34;" "\""))))))
