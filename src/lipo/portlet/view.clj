@@ -202,9 +202,12 @@
   (let [attachments (db/q-source (:xtdb ctx)
                                  '{:find [(pull ?f [:file/name :file/size
                                                     :meta/created
-                                                    :xt/id])]
-                                   :where [[?f :file/content ?id]]
-                                   :in [?id]}
+                                                    :xt/id]) ?lname]
+                                   :where [[?f :file/content ?id]
+                                           [?f :file/name ?name]
+                                           [(clojure.string/lower-case ?name) ?lname]]
+                                   :in [?id]
+                                   :order-by [[?lname :asc]]}
                                  id)]
     (html
      {:file "templates/attachments.html" :selector "div.attachments"}
