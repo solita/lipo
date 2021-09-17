@@ -12,6 +12,9 @@
    ;; Allow text and structural HTML
    (Safelist/relaxed)
 
+   ;; Preserve relative links within the system (images, attachments or other pages)
+   (.preserveRelativeLinks true)
+
    ;; Allow styling
    (.addAttributes ":all" (s "style"))
 
@@ -21,4 +24,6 @@
                                "allowfullscreen" "webkitallowfullscreen" "mozallowfullscreen"))))
 
 (defn sanitize [input-html]
-  (Jsoup/clean input-html safelist))
+  ;; NOTE: must provide base URI for relative links to work, even though it
+  ;; isn't used.
+  (Jsoup/clean input-html "http://__BASEURI__" safelist))
