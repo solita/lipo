@@ -1,32 +1,24 @@
 (ns lipo.html-sanitizer
-  "Use OWASP HTML sanitizer to cleanup user input of potentially
-  dangerous content."
-  (:import (org.owasp.html HtmlPolicyBuilder
-                           Sanitizers))
-  (:require [clojure.string :as str]))
+  "Use Jsoup to cleanup user input of potentially dangerous content."
+  (:import (org.jsoup Jsoup)
+           (org.jsoup.safety Safelist)))
 
-(def policy (reduce #(.and %1 %2)
-                    [Sanitizers/BLOCKS
-                     Sanitizers/FORMATTING
-                     Sanitizers/LINKS
-                     Sanitizers/IMAGES
-                     Sanitizers/STYLES
-                     Sanitizers/TABLES]))
 
-(defn- sanitize-with-policy [html]
-  (.sanitize policy html))
+(defn- s [& strings]
+  (into-array String strings))
+
+(def ^:private safelist
+  (->
+   ;; Allow text and structural HTML
+   (Safelist/relaxed)
+
+   ;; Allow styling
+   (.addAttributes ":all" (s "style"))
+
+   ;; Allow iframes (for some video embeds in content)
+   (.addTags (s "iframe"))
+   (.addAttributes "iframe" (s "src" "frameborder" "width" "height"
+                               "allowfullscreen" "webkitallowfullscreen" "mozallowfullscreen"))))
 
 (defn sanitize [input-html]
-  (-> input-html
-      sanitize-with-policy
-
-      ;; Sanitizer is too strict, we DO want to allow {{...edn...}} in content
-      ;; that is read in as maps.
-      ;;
-      ;; sanitizer adds HTML comment between opening braces and turns double quotes
-      ;; to HTML entities.
-      (str/replace #"\{<!-- -->\{(.+)?\}\}"
-                   (fn [[_ edn]]
-                     (-> (str "{{" edn "}}")
-                         ;; allow real doublequote
-                         (str/replace "&#34;" "\""))))))
+  (Jsoup/clean input-html safelist))

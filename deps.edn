@@ -24,9 +24,10 @@
         ;; Required for multipart upload (for now)
         javax.servlet/servlet-api {:mvn/version "2.5"}
 
-        ;; OWASP library to sanitize HTML
-        com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer
-        {:mvn/version "20200713.1"}
+        ;; specify Jsoup dependency (to cleanup user HTML)
+        org.jsoup/jsoup {:mvn/version "1.14.2"}
+
+
 
         ;; S3 libraries
         com.cognitect.aws/api {:mvn/version "0.8.456"}
