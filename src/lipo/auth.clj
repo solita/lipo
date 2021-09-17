@@ -7,6 +7,7 @@
             [re-html-template.core :refer [html]]
             [ring.util.io :as ring-io]
             [clojure.java.io :as io]
+            [clojure.string :as str]
             ripley.impl.output))
 
 (defn- request-jwt-token [req]
@@ -44,12 +45,14 @@
 
 (defn- wrap-fake-user
   [handler fake-user-name]
-  (fn [req]
-    (let [split-name (clojure.string/split fake-user-name #"\s+")]
-      (handler (assoc req :user {:user/id 42
-                                 :user/email (str "\"" fake-user-name "\"@example.com")
-                                 :user/given-name (first split-name)
-                                 :user/family-name (last split-name)})))))
+  (let [split-name (str/split fake-user-name #"\s+")
+        user {:user/id 42
+              :user/email (str "\"" fake-user-name "\"@example.com")
+              :user/given-name (first split-name)
+              :user/family-name (last split-name)}]
+    (fn [req]
+      (when-let [res (handler (assoc req :user user))]
+        (assoc-in res [:session :lipo.auth/user] user)))))
 
 (defn configure-auth
   "Add auth configuration to context"
