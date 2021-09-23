@@ -16,7 +16,7 @@
    (.preserveRelativeLinks true)
 
    ;; Allow styling
-   (.addAttributes ":all" (s "style"))
+   (.addAttributes ":all" (s "style" "class"))
 
    ;; Allow iframes (for some video embeds in content)
    (.addTags (s "iframe"))
