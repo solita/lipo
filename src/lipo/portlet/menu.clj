@@ -22,7 +22,7 @@
             (link-transforms go! title path)))))
 
 (defmethod p/render :menu [{:keys [db here go!]} _]
-  (let [items (->> (content-db/ls db "/")
-                   (sort-by :content/title))]
+  (let [items (content-db/sort-content
+               (content-db/ls db "/"))]
     (doseq [item items]
       (menu-link db go! here item))))

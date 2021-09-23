@@ -53,7 +53,8 @@
       [::h/when open?
        [:ul.ml-8
         [::h/for [{child-path :content/path id :xt/id :as content}
-                  (content-db/ls db (:xt/id content) :check-children? true)
+                  (content-db/sort-content
+                   (content-db/ls db (:xt/id content) :check-children? true))
                   :let [[open? set-open!] (source/use-state (contains? initial-open id))]]
          [::h/live open? (partial page-tree-item
                            (merge opts {:path (str path "/" child-path)

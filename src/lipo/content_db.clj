@@ -35,6 +35,15 @@
 
 (declare content-id)
 
+(defn sort-content
+  "Sort a list of pulled content maps.
+  Sorts first by order number, then alphabetically by title.
+  Items without order are last."
+  [content]
+  (sort-by (fn [{:content/keys [order title]}]
+             [(or order Integer/MAX_VALUE) title])
+           content))
+
 (defn ls
   "List content under path.
 
@@ -64,6 +73,7 @@
          (xt/q db
                  {:find '[(pull ?c [:xt/id
                                     :content/path :content/title
+                                    :content/order
                                     :content/parent :content/type])]
                   :where (filterv
                           some?
@@ -177,22 +187,22 @@
                (meta-model/modification-meta user))
         body (html-sanitizer/sanitize body)
         save-content (merge content
-                       {:content/title title
-                        :content/body body
-                        :content/excerpt excerpt}
-                       meta
-                       (when-not (str/blank? sub-page-path)
-                         {:content/path sub-page-path})
-                       (when-not (str/blank? type)
-                         {:content/type (keyword type)}))]
+                            {:content/title title
+                             :content/body body
+                             :content/excerpt excerpt}
+                            meta
+                            (when-not (str/blank? sub-page-path)
+                              {:content/path sub-page-path})
+                            (when-not (str/blank? type)
+                              {:content/type (keyword type)}))]
     ;; PENDING: Should merge as a db function
     (if (s/valid? :content/form-values save-content)
       (do
         (db/tx
-          xtdb
-          (user-db/ensure-user-tx user)
-          [:xtdb.api/put
-           save-content])
+         xtdb
+         (user-db/ensure-user-tx user)
+         [:xtdb.api/put
+          save-content])
         (if sub-page?
           ;; Go to the newly created sub page
           (go! (path (xt/db xtdb) content))
