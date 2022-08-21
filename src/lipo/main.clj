@@ -102,7 +102,7 @@
     (do
       (log/info "XTDB already started, not restarting it.")
       old-xtdb)
-    (let [{:keys [postgresql lmdb-dir lucene-dir]} config
+    (let [{:keys [postgresql rocksdb-dir lmdb-dir lucene-dir]} config
           node
           (xt/start-node
            (if postgresql
@@ -119,8 +119,14 @@
                :connection-pool :xtdb.jdbc/connection-pool}
 
               :xtdb/index-store
-              {:kv-store {:xtdb/module 'xtdb.lmdb/->kv-store
-                          :db-dir (io/file lmdb-dir)}}
+              (cond
+                lmdb-dir {:kv-store {:xtdb/module 'xtdb.lmdb/->kv-store
+                                     :db-dir (io/file lmdb-dir)}}
+
+                rocksdb-dir {:kv-store {:xtdb/module 'xtdb.rocksdb/->kv-store
+                                        :db-dir (io/file rocksdb-dir)}}
+                :else (throw (ex-info "Configure kv store location, either :rocksdb-dir or :lmdb-dir"
+                                      {:config config})))
               :xtdb.lucene/lucene-store {:db-dir lucene-dir}}
 
              (do
