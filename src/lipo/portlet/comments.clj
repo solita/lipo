@@ -10,16 +10,21 @@
             [lipo.portlet.user-menu :as portlet.user-menu]
             [ripley.js :as js]
             [lipo.localization :refer [tr tr!]]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [xtdb.api :as xt]))
 
 (defn- comments-source [node id]
-  (db/q-source node
-               '{:find [(pull ?c [* {:comment/author [:user/email :user/given-name :user/family-name]}]) ?ts]
-                 :where [[?c :comment/on id]
-                         [?c :comment/timestamp ?ts]]
-                 :in [id]
-                 :order-by [[?ts :asc]]}
-               id))
+  (db/q-source
+   node
+   (fn [ops]
+     (some #(and (= ::xt/put (first %))
+                 (= (:comment/on (second %)) id)) ops))
+   '{:find [(pull ?c [* {:comment/author [:user/email :user/given-name :user/family-name]}]) ?ts]
+     :where [[?c :comment/on id]
+             [?c :comment/timestamp ?ts]]
+     :in [id]
+     :order-by [[?ts :asc]]}
+   id))
 
 (defn render-comment [{:comment/keys [author text timestamp]}]
   (let [name (str (:user/given-name author) " " (:user/family-name author))]
