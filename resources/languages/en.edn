@@ -30,4 +30,10 @@
 
  :attachments {:add-link "Add link" :confirm-delete "Permanently delete this attachment?"}
  :user-menu {:login "Login"}
+ :comments {:no-comments "No comments yet."
+            :one-comment "1 comment."
+            :many-comments [:count " comments."]
+            :placeholder "Type your comment..."
+            :add-new "Add a new comment"
+            :post-comment "Post comment"}
  }

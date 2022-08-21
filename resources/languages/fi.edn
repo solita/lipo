@@ -28,4 +28,10 @@
  :search {:placeholder "Hae sisältöä..."
           :no-results "Ei tuloksia"}
  :attachments {:add-link "Lisää linkki" :confirm-delete "Poistetaanko tiedosto pysyvästi?"}
- :user-menu {:login "Kirjaudu sisään"}}
+ :user-menu {:login "Kirjaudu sisään"}
+ :comments {:no-comments "Ei kommentteja vielä."
+            :one-comment "1 kommentti."
+            :many-comments [:count " kommenttia."]
+            :placeholder "Kirjoita kommenttisi..."
+            :add-new "Lisää kommentti"
+            :post-comment "Tallenna kommentti"}}
