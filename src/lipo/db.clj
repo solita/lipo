@@ -42,20 +42,33 @@
           (log/warn t "Exception in async query"))))))
 
 (defn q-source
-  "Ripley source for a query. Updates automatically if new transactions."
-  [xtdb & args]
-  (let [q #(apply xt/q (xt/db xtdb) args)
+  "Ripley source for a query. Updates automatically if new transactions.
+  An optional check-fn can be provided after the XTDB node reference.
+  If a check-fn is provided, it is run against the tx ops to determine
+  if the query should be run again. This can be used to avoid doing
+  unnecessary queries.
+  "
+  [xtdb & optional-check-fn-and-args]
+  (let [check-fn (when (fn? (first optional-check-fn-and-args))
+                   (first optional-check-fn-and-args))
+        args (if check-fn
+               (rest optional-check-fn-and-args)
+               optional-check-fn-and-args)
+        q #(apply xt/q (xt/db xtdb) args)
         last-value (atom (q))
         xtdb-listener (atom nil)
         [source _listeners]
         (source/source-with-listeners #(deref last-value)
                                       #(-> xtdb-listener deref .close))]
     (reset! xtdb-listener
-            (xt/listen xtdb {:xtdb.api/event-type :xtdb.api/indexed-tx}
-                         (fn [& _]
+            (xt/listen xtdb {:xtdb.api/event-type :xtdb.api/indexed-tx
+                             :with-tx-ops? (boolean check-fn)}
+                       (fn [event]
+                         (when (or (nil? check-fn)
+                                   (check-fn (:xtdb.api/tx-ops event)))
                            (let [new-value (q)]
                              (reset! last-value new-value)
-                             (lp/write! source new-value)))))
+                             (lp/write! source new-value))))))
     source))
 
 (defn entity [db id]
