@@ -11,6 +11,13 @@
          (doto (java.security.MessageDigest/getInstance "MD5")
            (.update (.getBytes s "UTF-8")))))))
 
+(defn gravatar-url
+  ([user] (gravatar-url 32 user))
+  ([size {email :user/email}]
+   (when email
+     (let [hash (->> email str/lower-case md5)]
+       (format "https://www.gravatar.com/avatar/%s?size=%d&d=mp" hash size)))))
+
 (defmethod p/render :user-menu [{{user :user} :request :as ctx} _]
   (if (seq user)
     (let [hash (or (some->> user :user/email str/lower-case md5) "")

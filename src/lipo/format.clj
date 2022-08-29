@@ -1,6 +1,7 @@
 (ns lipo.format
   "Generic localized formatting of data for display."
-  (:require [lipo.localization :refer [tr]]))
+  (:require [lipo.localization :refer [tr]]
+            [ripley.html :as h]))
 
 
 (defmulti display type)
@@ -11,3 +12,7 @@
 
 (defmethod display :default [thing]
   (str thing))
+
+(defn render [x]
+  (let [str (display x)]
+    (h/html str)))

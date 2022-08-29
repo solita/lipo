@@ -22,14 +22,24 @@
   (fn [_ctx {type :portlet/type}] type))
 
 (defmethod render :default
-  [_ctx {type :portlet/type :as config}]
-  (let [conf (pr-str config)]
-    (h/html
-     [:div.border-2.border-black.m-4.p-4
-      [:div.bg-red-100
-       "ERROR, NO RENDER METHOD FOR PORTLET"
-       type]
-      [:div.font-mono conf]])))
+  [{loaded? ::loaded? :as ctx} {type :portlet/type :as config}]
+  ;; Try loading lipo.portlet.<name> ns if reaching default
+  (if (and (not loaded?)
+           (try
+             (require (symbol (str "lipo.portlet." (name type))))
+             true
+             (catch Throwable _t
+               false)))
+    (render (assoc ctx ::loaded? true) config)
+
+    ;; Can't find definition for portlet, render error box
+    (let [conf (pr-str config)]
+      (h/html
+       [:div.border-2.border-black.m-4.p-4
+        [:div.bg-red-100
+         "ERROR, NO RENDER METHOD FOR PORTLET"
+         type]
+        [:div.font-mono conf]]))))
 
 (def default-portlets
   "Default view portlets. Used if no portlets are defined for a slot in path."
@@ -40,7 +50,8 @@
    [{:portlet/type :page-tree}]
 
    :portlets/content
-   [{:portlet/type :view :inline-edit? true}]})
+   [{:portlet/type :view :inline-edit? true}
+    {:portlet/type :comments}]})
 
 (defn merge-default-portlets [portlets]
   (reduce
