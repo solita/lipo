@@ -40,4 +40,4 @@
         com.taoensso/timbre {:mvn/version "5.2.1"}}
  :aliases {:rocksdb {:extra-deps {com.xtdb/xtdb-rocksdb {:mvn/version "1.21.0"}}}
            :lmdb {:extra-deps {com.xtdb/xtdb-lmdb {:mvn/version "1.21.0"}}}
-           :dev {:extra-paths ["dev-src"]}}}
+           :dev {:extra-paths ["dev-src" "test"]}}}

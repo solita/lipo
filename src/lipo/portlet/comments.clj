@@ -13,18 +13,24 @@
             [clojure.string :as str]
             [xtdb.api :as xt]))
 
-(defn- comments-source [node id]
+(defn- new-comment-on-tx?
+  "Check if transaction contains a new comment on the given content id."
+  [id ops]
+  (some #(and (= ::xt/put (first %))
+              (= (:comment/on (second %)) id)) ops))
+
+(defn comments-source
+  "Return a source for comments on given content id, sorted by time."
+  [node id]
   (db/q-source
-   node
-   (fn [ops]
-     (some #(and (= ::xt/put (first %))
-                 (= (:comment/on (second %)) id)) ops))
+   node (partial new-comment-on-tx? id)
    '{:find [(pull ?c [* {:comment/author [:user/email :user/given-name :user/family-name]}]) ?ts]
      :where [[?c :comment/on id]
              [?c :comment/timestamp ?ts]]
      :in [id]
      :order-by [[?ts :asc]]}
    id))
+
 
 (defn render-comment [{:comment/keys [author text timestamp]}]
   (let [name (str (:user/given-name author) " " (:user/family-name author))]
@@ -38,13 +44,20 @@
 
        [:div.flex.flex-col.w-full
         [:div.flex.flex-row.justify-between
-         [:p.relative.text-xl.whitespace-nowrap.truncate.overflow-hidden
-          name]
+         [:p.relative.text-xl.whitespace-nowrap.truncate.overflow-hidden name]
          [:a.text-gray-500.text-xl {:href ""} [:i.fa-solid.fa-trash]]]
 
         [:p.text-gray-400.text-sm (format/render timestamp)]]]
 
       [:p.-mt-4.text-gray-500 text]])))
+
+(defn add-comment! [node {user-id :user/id} content-id comment-text]
+  (db/put! node
+           {:xt/id {:comment (java.util.UUID/randomUUID)}
+            :comment/author {:user/id user-id}
+            :comment/text comment-text
+            :comment/timestamp (java.util.Date.)
+            :comment/on content-id}))
 
 (defn comment-form [node user id]
   (h/html
@@ -62,15 +75,18 @@
         [:button.bg-white.text-gray-700.font-medium.py-1.px-4.border.border-gray-400.rounded-lg.tracking-wide.mr-1.hover:bg-gray-100
          {:on-click
           [(js/js #(when-not (str/blank? %)
-                     (db/put node
-                             {:xt/id {:comment (java.util.UUID/randomUUID)}
-                              :comment/author {:user/id (:user/id user)}
-                              :comment/text %
-                              :comment/timestamp (java.util.Date.)
-                              :comment/on id}))
+                     (add-comment! node user id %))
                   (js/input-value "comment-text"))
            "document.forms.newcomment.reset(); return false;"]}
          (tr! [:comments :post-comment])]]]]]]))
+
+(defn- comment-count [comment-count]
+  (let [msg (case comment-count
+              0 (tr [:comments :no-comments])
+              1 (tr [:comments :one-comment])
+              (tr [:comments :many-comments] {:count comment-count}))]
+    (h/html
+     [:div msg])))
 
 (defmethod p/render :comments [{:keys [xtdb db here user] :as ctx} _]
   (let [id (content-db/content-id db here)
@@ -78,14 +94,7 @@
     (h/html
      [:div.flex.flex-col
       [:div.divider.divider-vertical]
-      [::h/live (source/computed count comments)
-       (fn [comment-count]
-         (let [msg (case comment-count
-                     0 (tr [:comments :no-comments])
-                     1 (tr [:comments :one-comment])
-                     (tr [:comments :many-comments] {:count comment-count}))]
-           (h/html
-            [:div msg])))]
+      [::h/live (source/computed count comments) comment-count]
 
       [:div.py-4
        (live-collection

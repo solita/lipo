@@ -13,7 +13,7 @@
   (let [tx (xt/submit-tx xtdb (vec tx-ops))]
     (xt/await-tx xtdb tx)))
 
-(defn put [xtdb & docs]
+(defn put! [xtdb & docs]
   (assert (every? #(contains? % :xt/id) docs))
   (xt/submit-tx xtdb
                 (for [d docs]
