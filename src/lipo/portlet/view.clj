@@ -84,7 +84,9 @@
   [{:content/keys [title excerpt body type path] :as content} save! delete! cancel]
   (h/html
    [:div
-    [:form.editor {:on-submit ["document.getElementById('newbody').value = window.E.getData()"
+    [:form.editor {:on-submit ["
+    const myContent = tinymce.activeEditor.getContent();
+    document.getElementById('newbody').value = myContent"
                                (js/js save! (js/form-values "form.editor")) js/prevent-default]}
      ;; Show path field when creating new sub page
      [::h/when (and (not path) (not= (:xt/id content) "root"))
@@ -131,12 +133,9 @@
 
      [:script
       (h/out!
-       "ClassicEditor.create(document.querySelector('#content-body'), "
-       (cheshire/encode editor-config)
-       ").then( (e) => { "
-       (when body (str "e.setData(" (cheshire/encode body) "); "))
-       "window.E = e;"
-       "});")]]]))
+       "tinymce.init({
+          selector: 'div#content-body',
+        });")]]]))
 
 (defn- body-with-portlets
   "Read portlet definitions from body, returns sequence of

@@ -8,6 +8,7 @@ LIPO is a LIghtweight POrtal
 Before:
 - run `npm install`
 - create "lipo" database in local postgres
+- copy config.sample.edn to config.edn and customize according to comments
 
 To start server call `lipo.main/start` function in REPL.
 
