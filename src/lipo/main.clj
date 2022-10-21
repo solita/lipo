@@ -64,6 +64,7 @@
        (localization/with-language-fn
          (or (get-in ctx [:request :session :language]) localization/*language*)
          (fn []
+           (h/out! "<!DOCTYPE html>")
            (template/main-template (page-context ctx))))))))
 
 (defn app-routes [{auth :auth :as ctx}]
