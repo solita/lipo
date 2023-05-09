@@ -10,22 +10,21 @@
         co.deps/ring-etag-middleware {:mvn/version "0.2.1"}
 
 
-        com.xtdb/xtdb-core {:mvn/version "1.21.0"}
-        com.xtdb/xtdb-jdbc {:mvn/version "1.21.0"}
+        com.xtdb/xtdb-core {:mvn/version "1.23.2"}
+        com.xtdb/xtdb-jdbc {:mvn/version "1.23.2"}
         com.zaxxer/HikariCP {:mvn/version "3.4.5"}
         org.postgresql/postgresql {:mvn/version "42.2.18"}
         ;; NOTE: on mac lmdb requires setting environment
         ;; XTDB_DISABLE_LIBCRYPTO=true
         ;; XTDB_ENABLE_BYTEUTILS_SHA1=true
         ;; to prevent crash "java is loading libcrypto in an unsafe way"
-        com.xtdb/xtdb-lucene {:mvn/version "1.21.0"}
+        com.xtdb/xtdb-lucene {:mvn/version "1.23.2"}
 
         ;; Required for multipart upload (for now)
         javax.servlet/servlet-api {:mvn/version "2.5"}
 
         ;; specify Jsoup dependency (to cleanup user HTML)
         org.jsoup/jsoup {:mvn/version "1.14.2"}
-
 
 
         ;; S3 libraries
@@ -38,6 +37,6 @@
         ovotech/ring-jwt {:mvn/version "2.2.1"}
 
         com.taoensso/timbre {:mvn/version "5.2.1"}}
- :aliases {:rocksdb {:extra-deps {com.xtdb/xtdb-rocksdb {:mvn/version "1.21.0"}}}
-           :lmdb {:extra-deps {com.xtdb/xtdb-lmdb {:mvn/version "1.21.0"}}}
+ :aliases {:rocksdb {:extra-deps {com.xtdb/xtdb-rocksdb {:mvn/version "1.23.2"}}}
+           :lmdb {:extra-deps {com.xtdb/xtdb-lmdb {:mvn/version "1.23.2"}}}
            :dev {:extra-paths ["dev-src" "test"]}}}
