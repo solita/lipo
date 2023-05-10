@@ -30,7 +30,7 @@
   [db paths]
   (into #{}
         (map first)
-        (xt/q db '[:find ?parent ?c :where [?c :content/parent ?parent]
+        (xt/q db '[:find ?parent :where [_ :content/parent ?parent]
                      :in [?parent ...]] paths)))
 
 (declare content-id)
